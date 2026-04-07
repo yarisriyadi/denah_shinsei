@@ -32,8 +32,9 @@
             width: 320px; 
             background: var(--sidebar-bg); 
             color: white; 
-            display: flex; 
-            flex-direction: column; 
+            height: 100vh; 
+            display: flex;
+        flex-direction: column;
             z-index: 2000; 
             border-right: 1px solid rgba(255,255,255,0.05);
             transition: transform 0.3s ease; 
@@ -59,13 +60,14 @@
             box-sizing: border-box; 
         }
         .denah-group { 
-            margin-bottom: 8px; 
+            margin-bottom: 5px; 
             border-radius: 14px; 
             overflow: hidden; 
             transition: 0.3s; 
         }
         .sub-item { 
-            padding: 14px 18px; 
+            font-size: 13px;
+    padding: 10px 15px;
             cursor: pointer; 
             background: var(--item-bg);
             border: 1px solid rgba(255,255,255,0.05); 
@@ -118,8 +120,8 @@
             background: rgba(0,0,0,0.2); 
         }
         .sub-child { 
-            padding: 12px 18px 12px 50px; 
-            font-size: 13px; 
+           font-size: 11px; 
+    padding: 8px 18px 8px 50px; 
             color: var(--text-dim); 
             cursor: pointer; 
             display: flex; 
@@ -145,26 +147,33 @@
             color: var(--blue); 
             font-weight: 600; 
         }
-        .btn-delete { 
+        .btn-delete, .btn-edit { 
             width: 24px; 
             height: 24px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             border-radius: 6px; 
-            color: var(--red); 
             text-decoration: none; 
-            font-size: 18px; 
             opacity: 0; 
             transition: 0.2s; 
         }
-        .sub-item:hover .btn-delete, .sub-child:hover .btn-delete { 
+        .btn-delete { color: var(--red); font-size: 18px; }
+        .btn-edit { color: var(--blue); font-size: 14px; }
+
+        .sub-item:hover .btn-delete, .sub-item:hover .btn-edit,
+        .sub-child:hover .btn-delete, .sub-child:hover .btn-edit { 
             opacity: 0.5; 
         }
         .btn-delete:hover { 
             opacity: 1 !important; 
             background: rgba(255, 71, 87, 0.1); 
             transform: scale(1.1); 
+        }
+        .btn-edit:hover {
+            opacity: 1 !important;
+            background: rgba(52, 152, 219, 0.1);
+            transform: scale(1.1);
         }
         .sidebar-footer { 
             padding: 20px; 
@@ -199,10 +208,15 @@
         #content { 
             flex: 1; 
             position: relative; 
+            display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
             background: #1a1c1e;
             width: 100%; 
         }
         #map { 
+        flex-grow: 1; 
             width: 100%; 
             height: 100%; 
             outline: none; 
@@ -280,11 +294,15 @@
                 padding: 8px 12px; font-size: 11px; top: 10px; right: 10px;
                 max-width: 120px;
             }
-        }
-
         @media print {
             #sidebar, .btn-print, #mobile-menu-btn { display: none !important; }
         }
+        body.swal2-shown {
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+}
+
     </style>
 </head>
 <body>
@@ -304,7 +322,9 @@
                 $masterQuery = mysqli_query($conn, "SELECT * FROM $tableName WHERE parent_id = 0 ORDER BY id ASC");
                 while ($master = mysqli_fetch_assoc($masterQuery)) {
                     $mID = $kode . '_' . $master['id']; 
+        
                     ?>
+                    
                     <div class="denah-group" id="group-<?= $mID ?>">
                         <div class="sub-item" onclick="toggleSub('<?= $mID ?>'); handleMapLoad('<?= $master['file_gambar'] ?>', <?= $master['lebar_px'] ?>, <?= $master['tinggi_px'] ?>, '<?= $kode ?> - <?= addslashes($master['nama_lantai']) ?>', this)">
                             <div style="display:flex; align-items:center;">
@@ -312,8 +332,9 @@
                                 <strong><?= htmlspecialchars($master['nama_lantai']) ?></strong>
                             </div>
                             <div style="display:flex; align-items:center; gap: 8px;">
-                                <a href="hapus.php?id=<?= $master['id'] ?>&table=<?= $tableName ?>" class="btn-delete" onclick="return confirm('Hapus denah ini?')">×</a>
-                                <i class="arrow"></i>
+                                <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">✎</a>
+<a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">×</a>
+
                             </div>
                         </div>
                         <div class="child-container" id="child-<?= $mID ?>">
@@ -323,7 +344,9 @@
                                 ?>
                                 <div class="sub-child" onclick="handleMapLoad('<?= $sub['file_gambar'] ?>', <?= $sub['lebar_px'] ?>, <?= $sub['tinggi_px'] ?>, '<?= $kode ?> - <?= addslashes($sub['keterangan']) ?>', this)">
                                     <span><?= htmlspecialchars($sub['keterangan']) ?></span>
-                                    <a href="hapus.php?id=<?= $sub['id'] ?>&table=<?= $tableName ?>" class="btn-delete" onclick="return confirm('Hapus layer ini?')">×</a>
+                                    <div style="display:flex; align-items:center; gap: 8px;">
+                                        <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">✎</a>
+<a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">×</a>                                    </div>
                                 </div>
                                 <?php
                             }
@@ -356,8 +379,12 @@
     <div id="map"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
 <script>
+    
     var map = L.map('map', {
         crs: L.CRS.Simple, 
         minZoom: 0,
@@ -390,7 +417,8 @@
     }
 
     function loadMap(file, w, h, judul, element) {
-        if (window.event && window.event.target.classList.contains('btn-delete')) return;
+        if (window.event && (window.event.target.classList.contains('btn-delete') || window.event.target.classList.contains('btn-edit'))) return;
+        
         document.getElementById('current-label').innerText = judul;
         document.querySelectorAll('.sub-item, .sub-child').forEach(i => i.classList.remove('active'));
         element.classList.add('active');
@@ -403,6 +431,94 @@
         currentOverlay = L.imageOverlay('uploads/' + file, bounds).addTo(map);
         map.fitBounds(bounds);
     }
+var preloadedImages = [];
+
+function preloadDenahImages() {
+    const items = document.querySelectorAll('[onclick*="handleMapLoad"]');
+    
+    items.forEach(item => {
+        const onclickAttr = item.getAttribute('onclick');
+        const match = onclickAttr.match(/'([^']+)'/);
+        
+        if (match && match[1]) {
+            const imgUrl = 'uploads/' + match[1];
+            const img = new Image();
+            img.src = imgUrl;
+            preloadedImages.push(img); 
+        }
+    });
+    console.log("Preloading " + preloadedImages.length + " gambar selesai.");
+}
+
+    function renameItem(event, id, table, oldName) {
+    event.stopPropagation(); 
+
+    Swal.fire({
+        title: 'Ubah Nama',
+        input: 'text',
+        inputValue: oldName,
+        inputLabel: 'Masukkan nama baru untuk denah/layer ini',
+        showCancelButton: true,
+        reverseButtons: true,
+        confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#ff4757',
+        background: '#1a1c1e', 
+        color: '#ffffff',
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+        preConfirm: (newName) => {
+            if (!newName || newName.trim() === "") {
+                Swal.showValidationMessage('Nama tidak boleh kosong!');
+                return false;
+            }
+            
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('table', table);
+            formData.append('new_name', newName.trim());
+
+            return fetch('rename.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(response.statusText);
+                return response.json();
+            })
+            .catch(error => {
+                Swal.showValidationMessage(`Request failed: ${error}`);
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Nama telah diperbarui.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#1a1c1e',
+                    color: '#ffffff'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: result.value.message,
+                    background: '#1a1c1e',
+                    color: '#ffffff'
+                });
+            }
+        }
+    });
+}
 
     async function printUltraHighResDenah() {
         if (!currentOverlay) {
@@ -423,7 +539,7 @@
             const canvas = await html2canvas(imgElement, {
                 useCORS: true,
                 backgroundColor: null,
-                scale: 5,             
+                scale: 5,             
                 logging: false,
                 imageTimeout: 0
             });
@@ -460,10 +576,69 @@
         }
     }
 
-    window.onload = function() {
-        const firstItem = document.querySelector('.sub-item');
-        if(firstItem) firstItem.click();
-    };
+   window.onload = function() {
+    preloadDenahImages();
+    const firstItem = document.querySelector('.sub-item');
+    if(firstItem) firstItem.click();
+};
+function deleteItem(event, id, table, name) {
+    event.stopPropagation(); 
+
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Denah "${name}" akan dihapus secara permanen!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff4757',
+        cancelButtonColor: '#3498db',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        background: '#1a1c1e',
+        color: '#ffffff',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Menghapus...',
+                allowOutsideClick: false,
+                background: '#1a1c1e',
+                color: '#ffffff',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`hapus.php?id=${id}&table=${table}`)
+                .then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terhapus!',
+                            text: 'Data telah berhasil dihapus.',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            background: '#1a1c1e',
+                            color: '#ffffff'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        throw new Error('Gagal menghapus data.');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error.message,
+                        background: '#1a1c1e',
+                        color: '#ffffff'
+                    });
+                });
+        }
+    });
+}
+
 </script>
 </body>
 </html>
