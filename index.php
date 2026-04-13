@@ -1,4 +1,13 @@
-<?php include 'koneksi.php'; ?>
+<?php
+session_start();
+
+if (!isset($_SESSION['terverifikasi']) || $_SESSION['terverifikasi'] !== true) {
+    header("Location: verifikasi.php");
+    exit();
+}
+
+include 'koneksi.php';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -521,60 +530,96 @@ function preloadDenahImages() {
 }
 
     async function printUltraHighResDenah() {
-        if (!currentOverlay) {
-            alert("Pilih denah terlebih dahulu!");
-            return;
-        }
-
-        const btn = document.getElementById('btnExport');
-        const originalText = btn.innerHTML;
-        const judul = document.getElementById('current-label').innerText;
-
-        btn.disabled = true;
-        btn.innerHTML = "Processing...";
-
-        try {
-            const imgElement = currentOverlay.getElement();
-
-            const canvas = await html2canvas(imgElement, {
-                useCORS: true,
-                backgroundColor: null,
-                scale: 5,             
-                logging: false,
-                imageTimeout: 0
-            });
-
-            const imgData = canvas.toDataURL('image/png', 1.0);
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('l', 'mm', 'a4');
-            
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgProps = pdf.getImageProperties(imgData);
-            const ratio = imgProps.width / imgProps.height;
-
-            let printWidth = pageWidth;
-            let printHeight = pageWidth / ratio;
-
-            if (printHeight > pageHeight) {
-                printHeight = pageHeight;
-                printWidth = pageHeight * ratio;
-            }
-
-            const xPos = (pageWidth - printWidth) / 2;
-            const yPos = (pageHeight - printHeight) / 2;
-
-            pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'NONE');
-            pdf.save(`Denah${judul.replace(/[^a-z0-9]/gi, '_')}.pdf`);
-
-        } catch (err) {
-            console.error(err);
-            alert("Gagal Export: " + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
+    if (!currentOverlay) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Oops...',
+            text: 'Silakan pilih denah terlebih dahulu!',
+            background: '#1a1c1e',
+            color: '#fff',
+            confirmButtonColor: '#3498db'
+        });
+        return;
     }
+
+    const btn = document.getElementById('btnExport');
+    const originalText = btn.innerHTML;
+    const judul = document.getElementById('current-label').innerText;
+
+    Swal.fire({
+        title: 'Sedang Memproses...',
+        html: 'Mohon tunggu, sedang menghasilkan PDF kualitas tinggi.',
+        allowOutsideClick: false,
+        background: '#1a1c1e',
+        color: '#fff',
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    btn.disabled = true;
+
+    try {
+        const imgElement = currentOverlay.getElement();
+
+        const canvas = await html2canvas(imgElement, {
+            useCORS: true,
+            backgroundColor: null,
+            scale: 5,             
+            logging: false,
+            imageTimeout: 0
+        });
+
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const ratio = imgProps.width / imgProps.height;
+
+        let printWidth = pageWidth;
+        let printHeight = pageWidth / ratio;
+
+        if (printHeight > pageHeight) {
+            printHeight = pageHeight;
+            printWidth = pageHeight * ratio;
+        }
+
+        const xPos = (pageWidth - printWidth) / 2;
+        const yPos = (pageHeight - printHeight) / 2;
+
+        pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'NONE');
+        pdf.save(`Denah_${judul.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+
+        // 3. Notifikasi Sukses
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Denah telah berhasil diekspor ke PDF.',
+            background: '#1a1c1e',
+            color: '#fff',
+            confirmButtonColor: '#2ecc71',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Export',
+            text: err.message,
+            background: '#1a1c1e',
+            color: '#fff',
+            confirmButtonColor: '#e74c3c'
+        });
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
 
    window.onload = function() {
     preloadDenahImages();
@@ -638,6 +683,28 @@ function deleteItem(event, id, table, name) {
         }
     });
 }
+let inactivityTime = function () {
+    let time;
+    
+    const timeoutDuration = 1 * 60 * 1000; 
+
+    function logout() {
+        window.location.href = 'logout.php'; 
+    }
+
+    function resetTimer() {
+        clearTimeout(time);
+        time = setTimeout(logout, timeoutDuration);
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onclick = resetTimer;
+    document.ontouchstart = resetTimer; 
+};
+
+inactivityTime();
 
 </script>
 </body>
