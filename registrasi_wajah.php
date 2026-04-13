@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registrasi Wajah - Shinsei Map</title>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -206,7 +207,7 @@
     </div>
 
     <script>
-        const video = document.getElementById('video');
+    const video = document.getElementById('video');
     const status = document.getElementById('status');
     const inputNama = document.getElementById('nama');
     const vBox = document.getElementById('v-box');
@@ -220,17 +221,18 @@
         try {
             if (isMobile) {
                 await Swal.fire({
-                    title: 'Izin Biometrik',
-                    text: 'Sistem akan mengakses kamera untuk merekam data wajah Anda. Pastikan pencahayaan cukup.',
-                    icon: 'camera', // Menggunakan icon kamera jika tersedia/custom
-                    confirmButtonText: 'Mulai Sekarang',
-                    confirmButtonColor: '#3498db',
-                    background: '#1a1c1e',
-                    color: '#fff',
-                    allowOutsideClick: false,
-                    customClass: { popup: 'swal2-dark-custom' }
-                });
-            }
+    title: 'Izin Biometrik',
+    text: 'Sistem akan mengakses kamera untuk merekam data wajah Anda.',
+    imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png', // Contoh URL icon kamera
+    imageWidth: 80,
+    imageHeight: 80,
+    imageAlt: 'Icon Kamera',
+    confirmButtonText: 'Mulai Sekarang',
+    confirmButtonColor: '#3498db',
+    background: '#1a1c1e',
+    color: '#fff'
+});
+}
 
             showStatus("Memuat AI Engine...", "process");
             await Promise.all([

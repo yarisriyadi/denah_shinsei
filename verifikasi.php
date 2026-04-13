@@ -140,18 +140,21 @@
             
             try {
                 if (isMobile) {
-                    await Swal.fire({
-                        title: 'Akses Sistem',
-                        text: 'Gunakan kamera untuk otentikasi node.',
-                        icon: 'info',
-                        confirmButtonText: 'Aktifkan',
-                        confirmButtonColor: '#3498db',
-                        background: '#1a1c1e',
-                        color: '#fff',
-                        customClass: { popup: 'swal2-dark-custom' },
-                        allowOutsideClick: false
-                    });
-                }
+    await Swal.fire({
+        title: 'Akses Sistem',
+        text: 'Gunakan kamera untuk verifikasi wajah.',
+        imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png',
+        imageWidth: 100, // Ukuran lebar ikon
+        imageHeight: 100, // Ukuran tinggi ikon
+        imageAlt: 'Camera Icon',
+        confirmButtonText: 'Aktifkan',
+        confirmButtonColor: '#3498db',
+        background: '#1a1c1e',
+        color: '#fff',
+        customClass: { popup: 'swal2-dark-custom' },
+        allowOutsideClick: false
+    });
+}
 
                 status.innerText = "Memuat AI Engine...";
                 await Promise.all([
