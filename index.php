@@ -311,13 +311,36 @@ include 'koneksi.php';
     overflow: hidden !important;
 }
 }
+.swal2-container {
+    z-index: 9999 !important;
+}
+body.swal2-shown {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+.btn-edit-canvas {
+    font-size: 14px;
+    opacity: 0.6;
+    transition: 0.3s;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.sub-child:hover .btn-edit-canvas, 
+.sub-item:hover .btn-edit-canvas {
+    opacity: 1;
+}
+
+.btn-edit-canvas:hover {
+    background: rgba(46, 204, 113, 0.2);
+    transform: scale(1.2);
+}
 
     </style>
 </head>
 <body>
 
-<button id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
+<button id="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Buka Menu Navigasi">☰</button>
 <div id="sidebar">
     <div class="sidebar-header">
         <h1 class="brand">SHINSEI <span>MAP</span></h1>
@@ -342,25 +365,35 @@ include 'koneksi.php';
                             </div>
                             <div style="display:flex; align-items:center; gap: 8px;">
                                 <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">✎</a>
-<a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">×</a>
+                                <a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">×</a>
+                                                                        <a href="edit_denah.php?id=<?= $master['id'] ?>&table=<?= $tableName ?>" class="btn-edit" style="color: #2ecc71; opacity: 1;" title="Edit Layout">🎨</a>
 
                             </div>
                         </div>
                         <div class="child-container" id="child-<?= $mID ?>">
-                            <?php
-                            $subQuery = mysqli_query($conn, "SELECT * FROM $tableName WHERE parent_id = {$master['id']} ORDER BY keterangan ASC");
-                            while ($sub = mysqli_fetch_assoc($subQuery)) {
-                                ?>
-                                <div class="sub-child" onclick="handleMapLoad('<?= $sub['file_gambar'] ?>', <?= $sub['lebar_px'] ?>, <?= $sub['tinggi_px'] ?>, '<?= $kode ?> - <?= addslashes($sub['keterangan']) ?>', this)">
-                                    <span><?= htmlspecialchars($sub['keterangan']) ?></span>
-                                    <div style="display:flex; align-items:center; gap: 8px;">
-                                        <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">✎</a>
-<a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">×</a>                                    </div>
-                                </div>
-                                <?php
-                            }
-                            ?>
-                        </div>
+    <?php
+    $subQuery = mysqli_query($conn, "SELECT * FROM $tableName WHERE parent_id = {$master['id']} ORDER BY keterangan ASC");
+    while ($sub = mysqli_fetch_assoc($subQuery)) {
+        ?>
+        <div class="sub-child" onclick="handleMapLoad('<?= $sub['file_gambar'] ?>', <?= $sub['lebar_px'] ?>, <?= $sub['tinggi_px'] ?>, '<?= $kode ?> - <?= addslashes($sub['keterangan']) ?>', this)">
+            <span><?= htmlspecialchars($sub['keterangan']) ?></span>
+            
+            <div style="display:flex; align-items:center; gap: 8px;">
+                <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">✎</a>
+                
+                <a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $sub['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($sub['keterangan']) ?>')">×</a>
+                
+                <a href="edit_denah.php?id=<?= $sub['id'] ?>&table=<?= $tableName ?>" 
+                   class="btn-edit-canvas" 
+                   style="color: #2ecc71; text-decoration: none;" 
+                   onclick="event.stopPropagation();" 
+                   title="Edit Konten Gambar Sub-Denah">🎨</a>
+            </div>
+        </div>
+        <?php
+    }
+    ?>
+</div>
                     </div>
                     <?php
                 }
@@ -393,6 +426,10 @@ include 'koneksi.php';
 <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
 <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
 <script>
+
+    const Toast = Swal.mixin({
+    focusConfirm: false,
+});
     
     var map = L.map('map', {
         crs: L.CRS.Simple, 
@@ -460,30 +497,29 @@ function preloadDenahImages() {
 }
 
     function renameItem(event, id, table, oldName) {
-    event.stopPropagation(); 
+    event.stopPropagation();
 
     Swal.fire({
         title: 'Ubah Nama',
         input: 'text',
         inputValue: oldName,
-        inputLabel: 'Masukkan nama baru untuk denah/layer ini',
+        inputLabel: 'Masukkan nama baru untuk denah ini',
         showCancelButton: true,
         reverseButtons: true,
         confirmButtonText: 'Simpan',
         cancelButtonText: 'Batal',
         confirmButtonColor: '#3498db',
         cancelButtonColor: '#ff4757',
-        background: '#1a1c1e', 
+        background: '#1a1c1e',
         color: '#ffffff',
-        inputAttributes: {
-            autocapitalize: 'off'
-        },
+        // Tambahan agar tidak terganggu keyboard mobile
+        heightAuto: false, 
         preConfirm: (newName) => {
             if (!newName || newName.trim() === "") {
                 Swal.showValidationMessage('Nama tidak boleh kosong!');
                 return false;
             }
-            
+
             const formData = new FormData();
             formData.append('id', id);
             formData.append('table', table);
@@ -494,37 +530,82 @@ function preloadDenahImages() {
                 body: formData
             })
             .then(response => {
-                if (!response.ok) throw new Error(response.statusText);
+                if (!response.ok) throw new Error('Gagal menghubungi server');
                 return response.json();
             })
             .catch(error => {
                 Swal.showValidationMessage(`Request failed: ${error}`);
             });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Nama telah diperbarui.',
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#1a1c1e',
+                color: '#ffffff'
+            }).then(() => location.reload());
+        }
+    });
+}
+
+function deleteItem(event, id, table, name) {
+    event.stopPropagation();
+
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Denah "${name}" akan dihapus secara permanen!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff4757',
+        cancelButtonColor: '#3498db',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        background: '#1a1c1e',
+        color: '#ffffff',
+        reverseButtons: true,
+        heightAuto: false
     }).then((result) => {
         if (result.isConfirmed) {
-            if (result.value.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Nama telah diperbarui.',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    background: '#1a1c1e',
-                    color: '#ffffff'
-                }).then(() => {
-                    location.reload();
+            // Tampilkan loading saat proses hapus
+            Swal.fire({
+                title: 'Menghapus...',
+                allowOutsideClick: false,
+                background: '#1a1c1e',
+                color: '#ffffff',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`hapus.php?id=${id}&table=${table}`)
+                .then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terhapus!',
+                            text: 'Data telah berhasil dihapus.',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            background: '#1a1c1e',
+                            color: '#ffffff'
+                        }).then(() => location.reload());
+                    } else {
+                        throw new Error('Gagal menghapus data dari server.');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error.message,
+                        background: '#1a1c1e',
+                        color: '#ffffff'
+                    });
                 });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: result.value.message,
-                    background: '#1a1c1e',
-                    color: '#ffffff'
-                });
-            }
         }
     });
 }
@@ -593,7 +674,6 @@ function preloadDenahImages() {
         pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'NONE');
         pdf.save(`Denah_${judul.replace(/[^a-z0-9]/gi, '_')}.pdf`);
 
-        // 3. Notifikasi Sukses
         Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
@@ -648,6 +728,10 @@ function deleteItem(event, id, table, name) {
                 allowOutsideClick: false,
                 background: '#1a1c1e',
                 color: '#ffffff',
+                didClose: () => {
+            document.getElementById('mobile-menu-btn').focus();
+        }
+    }).then((result) => {
                 didOpen: () => {
                     Swal.showLoading();
                 }
