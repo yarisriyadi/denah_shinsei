@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
@@ -135,98 +138,102 @@
     </div>
 
     <script>
-        const video = document.getElementById('video');
-        const status = document.getElementById('status');
-        const vBox = document.getElementById('v-box');
-        const secretTrigger = document.getElementById('secret-trigger');
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+    const vBox = document.getElementById('v-box');
+    const secretTrigger = document.getElementById('secret-trigger');
 
-        let isFinished = false;
-        let faceMatcher = null;
-        let clickCount = 0;
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let isFinished = false;
+    let faceMatcher = null;
+    let clickCount = 0;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        secretTrigger.addEventListener('click', () => {
-            clickCount++;
-            if (clickCount === 5) window.location.href = 'registrasi_wajah.php';
-            setTimeout(() => { clickCount = 0; }, 2000);
-        });
+    secretTrigger.addEventListener('click', () => {
+        clickCount++;
+        if (clickCount === 5) window.location.href = 'registrasi_wajah.php';
+        setTimeout(() => { clickCount = 0; }, 2000);
+    });
 
-        function showStatus(text, type) {
-            status.innerText = text;
-            vBox.classList.remove('scanning', 'success', 'error');
-            if (type === 'success') {
-                status.className = 'msg-success';
-                vBox.classList.add('success');
-            } else if (type === 'error') {
-                status.className = 'msg-error';
-                vBox.classList.add('error');
-            } else {
-                status.className = 'msg-process';
-                if (text.includes("Memindai") || text.includes("Scanning")) vBox.classList.add('scanning');
-            }
+    function showStatus(text, type) {
+        status.innerText = text;
+        vBox.classList.remove('scanning', 'success', 'error');
+        if (type === 'success') {
+            status.className = 'msg-success';
+            vBox.classList.add('success');
+        } else if (type === 'error') {
+            status.className = 'msg-error';
+            vBox.classList.add('error');
+        } else {
+            status.className = 'msg-process';
+            if (text.includes("Memindai") || text.includes("Scanning")) vBox.classList.add('scanning');
         }
+    }
 
-        async function init() {
-            const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+    async function init() {
+        const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+        
+        try {
+            if (isMobile) {
+                await Swal.fire({
+                    title: 'Akses Sistem',
+                    text: 'Gunakan kamera untuk verifikasi wajah.',
+                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png',
+                    imageWidth: 80, imageHeight: 80,
+                    confirmButtonText: 'Aktifkan',
+                    confirmButtonColor: '#3498db',
+                    background: '#1a1c1e', color: '#fff',
+                    customClass: { popup: 'swal2-dark-custom' },
+                    allowOutsideClick: false
+                });
+            }
+
+            showStatus("Memuat AI Engine...", "process");
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            ]);
             
-            try {
-                if (isMobile) {
-                    await Swal.fire({
-                        title: 'Akses Sistem',
-                        text: 'Gunakan kamera untuk verifikasi wajah.',
-                        imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png',
-                        imageWidth: 80,
-                        imageHeight: 80,
-                        confirmButtonText: 'Aktifkan',
-                        confirmButtonColor: '#3498db',
-                        background: '#1a1c1e',
-                        color: '#fff',
-                        customClass: { popup: 'swal2-dark-custom' },
-                        allowOutsideClick: false
-                    });
-                }
-
-                showStatus("Memuat AI Engine...", "process");
-                await Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-                ]);
-                
-                showStatus("Sinkronisasi Database...", "process");
-                const response = await fetch('ambil_data_wajah.php');
-                const dataWajah = await response.json();
-
-                if (!dataWajah || dataWajah.length === 0) {
-                    showStatus("Database Kosong.", "error");
-                    return;
-                }
-
-                const labeledDescriptors = dataWajah.map(user => {
-                    const desc = typeof user.descriptor === 'string' ? JSON.parse(user.descriptor) : user.descriptor;
-                    return new faceapi.LabeledFaceDescriptors(user.nama, [new Float32Array(desc)]);
-                });
-
-                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
-
-                showStatus("Menghubungkan Kamera...", "process");
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
-                });
-                video.srcObject = stream;
-                
-                showStatus("Scanning Mode...", "process");
-
-            } catch (err) {
-                console.error(err);
-                showStatus("Gagal memuat sistem.", "error");
+            showStatus("Sinkronisasi Database...", "process");
+            const response = await fetch('ambil_data_wajah.php');
+            if (!response.ok) throw new Error("Gagal mengambil data dari database");
+            
+            const dataWajah = await response.json();
+            if (!dataWajah || dataWajah.length === 0) {
+                showStatus("Database Kosong.", "error");
+                return;
             }
+
+            const labeledDescriptors = dataWajah.map(user => {
+                const desc = typeof user.descriptor === 'string' ? JSON.parse(user.descriptor) : user.descriptor;
+                return new faceapi.LabeledFaceDescriptors(user.nama, [new Float32Array(desc)]);
+            });
+
+            faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
+
+            showStatus("Menghubungkan Kamera...", "process");
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            video.srcObject = stream;
+            
+            // Tunggu metadata video siap sebelum memulai loop
+            video.onloadedmetadata = () => {
+                showStatus("Scanning Mode...", "process");
+                startScanning();
+            };
+
+        } catch (err) {
+            console.error("Detail Error:", err);
+            showStatus("Gagal: " + err.message, "error");
         }
+    }
 
-        video.addEventListener('play', () => {
-            const scanLoop = setInterval(async () => {
-                if (isFinished || !faceMatcher) return;
+    function startScanning() {
+        const scanLoop = setInterval(async () => {
+            if (isFinished || !faceMatcher) return;
 
+            try {
                 const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks()
                     .withFaceDescriptor();
@@ -244,10 +251,8 @@
                             title: 'Akses Diterima!',
                             text: `Nama: ${bestMatch.label}`,
                             icon: 'success',
-                            background: '#1a1c1e',
-                            color: '#fff',
-                            timer: 2000,
-                            timerProgressBar: true,
+                            background: '#1a1c1e', color: '#fff',
+                            timer: 2000, timerProgressBar: true,
                             showConfirmButton: false,
                             customClass: { popup: 'swal2-dark-custom' }
                         }).then(() => {
@@ -261,10 +266,13 @@
                         });
                     }
                 }
-            }, 600);
-        });
+            } catch (scanErr) {
+                console.error("Loop Error:", scanErr);
+            }
+        }, 600);
+    }
 
-        window.onload = init;
-    </script>
+    window.onload = init;
+</script>
 </body>
 </html>

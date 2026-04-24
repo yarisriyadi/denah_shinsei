@@ -11,6 +11,9 @@ include 'koneksi.php';
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Denah Shinsei Denshi</title>
@@ -463,20 +466,25 @@ body.swal2-shown {
     }
 
     function loadMap(file, w, h, judul, element) {
-        if (window.event && (window.event.target.classList.contains('btn-delete') || window.event.target.classList.contains('btn-edit'))) return;
-        
-        document.getElementById('current-label').innerText = judul;
-        document.querySelectorAll('.sub-item, .sub-child').forEach(i => i.classList.remove('active'));
-        element.classList.add('active');
+    if (window.event && (window.event.target.classList.contains('btn-delete') || window.event.target.classList.contains('btn-edit'))) return;
+    
+    document.getElementById('current-label').innerText = judul;
+    document.querySelectorAll('.sub-item, .sub-child').forEach(i => i.classList.remove('active'));
+    element.classList.add('active');
 
-        if(currentOverlay) map.removeLayer(currentOverlay);
-        var sw = map.unproject([0, h], map.getMaxZoom());
-        var ne = map.unproject([w, 0], map.getMaxZoom());
-        var bounds = new L.LatLngBounds(sw, ne);
-        
-        currentOverlay = L.imageOverlay('uploads/' + file, bounds).addTo(map);
-        map.fitBounds(bounds);
-    }
+    if(currentOverlay) map.removeLayer(currentOverlay);
+    
+    var sw = map.unproject([0, h], map.getMaxZoom());
+    var ne = map.unproject([w, 0], map.getMaxZoom());
+    var bounds = new L.LatLngBounds(sw, ne);
+    
+    // TAMBAHKAN TIMESTAMP DI SINI
+    var timestamp = new Date().getTime();
+    var imageUrl = 'uploads/' + file + '?v=' + timestamp;
+    
+    currentOverlay = L.imageOverlay(imageUrl, bounds).addTo(map);
+    map.fitBounds(bounds);
+}
 var preloadedImages = [];
 
 function preloadDenahImages() {

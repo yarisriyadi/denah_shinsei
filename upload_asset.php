@@ -5,17 +5,34 @@ if (!isset($_SESSION['terverifikasi'])) {
     exit(); 
 }
 
-// Menjaga parameter context tetap ada agar tidak salah saat kembali ke editor
+// 1. Context data untuk navigasi balik
 $back_id = $_GET['id'] ?? ($_POST['back_id'] ?? '');
 $back_table = $_GET['table'] ?? ($_POST['back_table'] ?? '');
 
+// LOGIKA HAPUS ASSET
+if (isset($_GET['delete'])) {
+    $file_name = basename($_GET['delete']);
+    $file_path = "assets/items/" . $file_name;
+    
+    // Pastikan file ada dan bukan direktori untuk keamanan
+    if (!empty($file_name) && file_exists($file_path) && is_file($file_path)) {
+        unlink($file_path);
+        $status = "deleted";
+    } else {
+        $status = "not_found";
+    }
+    header("Location: upload_asset.php?status=$status&id=" . urlencode($back_id) . "&table=" . urlencode($back_table));
+    exit();
+}
+
+// LOGIKA UPLOAD
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
     $targetDir = "assets/items/";
     if (!file_exists($targetDir)) { 
         mkdir($targetDir, 0777, true); 
     }
     
-    $fileName = time() . '_' . basename($_FILES["new_asset"]["name"]); // Tambah prefix waktu agar nama unik
+    $fileName = time() . '_' . basename($_FILES["new_asset"]["name"]);
     $targetFilePath = $targetDir . $fileName;
     $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
 
@@ -30,8 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         $status = "invalid"; 
     }
     
-    // Redirect kembali dengan status dan tetap membawa context ID & Table
-    header("Location: upload_asset.php?status=$status&id=$back_id&table=$back_table");
+    header("Location: upload_asset.php?status=$status&id=" . urlencode($back_id) . "&table=" . urlencode($back_table));
     exit();
 }
 ?>
@@ -41,228 +57,317 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Asset Library</title>
+    <title>Asset Library - Pro Manager</title>
+    <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --blue: #3498db;
-            --dark-bg: #0f1113;
-            --panel-bg: #1a1c1e;
-            --border: #333;
+            --primary: #3b82f6;
+            --danger: #ef4444;
+            --bg-dark: #0b0f1a;
+            --bg-panel: #161e2d;
+            --border: #2d3748;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--dark-bg); 
-            color: #e0e0e0; 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
             margin: 0;
             padding: 20px;
-            line-height: 1.6;
+            min-height: 100vh;
         }
 
-        .container { 
-            max-width: 900px; 
-            margin: 20px auto; 
-            background: var(--panel-bg); 
-            padding: 30px; 
-            border-radius: 16px; 
+        .main-card { 
+            width: 100%;
+            max-width: 850px; 
+            margin: 40px auto;
+            background: var(--bg-panel); 
+            padding: 40px; 
+            border-radius: 28px; 
             border: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+            position: relative;
         }
 
-        .header-area {
+        /* Close Button (X) */
+        .close-wrapper {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+        }
+        .btn-x {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 14px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border);
+        }
+        .btn-x:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+            transform: rotate(90deg);
         }
 
-        h2 { margin: 0; color: white; font-size: 24px; }
-        h3 { color: #888; font-size: 16px; font-weight: 500; margin-top: 5px; }
+        .header-content h2 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .header-content p { color: var(--text-muted); margin: 8px 0 35px; font-size: 15px; }
 
-        .btn { 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            border: none; 
-            cursor: pointer; 
-            font-weight: 600; 
+        /* Upload Zone */
+        .upload-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 45px;
+            transition: 0.3s ease;
+        }
+        .upload-container:hover { border-color: var(--primary); background: rgba(59, 130, 246, 0.02); }
+
+        .file-input-label {
+            display: block;
+            margin-bottom: 20px;
+            color: var(--text-muted);
             font-size: 14px;
-            transition: all 0.2s ease;
+        }
+
+        .btn-upload {
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            text-decoration: none;
+            gap: 12px;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
         }
+        .btn-upload:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-        .btn-blue { background: var(--blue); color: white; }
-        .btn-blue:hover { background: #2980b9; transform: translateY(-2px); }
-
-        .btn-back { 
-            background: #25282c; 
-            color: #ccc; 
-            border: 1px solid var(--border);
-        }
-        .btn-back:hover { background: #2c3136; color: white; }
-
-        .upload-box { 
-            border: 2px dashed #444; 
-            padding: 40px 20px; 
-            text-align: center; 
-            border-radius: 12px; 
-            margin-bottom: 40px; 
-            background: rgba(255, 255, 255, 0.02);
-            transition: border-color 0.3s;
-        }
-        .upload-box:hover { border-color: var(--blue); }
-
-        input[type="file"] {
-            background: #25282c;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            color: #aaa;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .grid-title {
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
+        /* Asset Grid */
+        .grid-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
+            padding: 0 5px;
+        }
+        .grid-info span { font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+        .asset-grid { 
+    display: grid; 
+    /* Menggunakan minmax yang lebih kecil agar di HP bisa muat 2-3 kolom dengan rapi */
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
+    gap: 12px; 
+    max-height: 500px; 
+    overflow-y: auto;
+    padding: 10px 5px;
+}
+        .asset-grid::-webkit-scrollbar { width: 6px; }
+        .asset-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .asset-item { 
+    background: #1c2638; 
+    padding: 12px; /* Padding dikurangi agar lebih compact */
+    border-radius: 16px; /* Radius sedikit diperhalus */
+    text-align: center; 
+    border: 1px solid var(--border); 
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+        .asset-item:hover { border-color: var(--primary); transform: translateY(-5px); background: #222d42; }
+
+        .asset-item img { 
+    width: 100%; 
+    height: 70px; /* Tinggi gambar dikurangi agar tidak terlalu dominan */
+    object-fit: contain; 
+    margin-bottom: 8px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+}
+
+        .asset-item .name {
+    font-size: 10px; /* Ukuran font diperkecil */
+    color: var(--text-muted);
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Nama file panjang akan menjadi 'namafile...' */
+    opacity: 0.8;
+}
+
+        /* Button Hapus: User Friendly & Touch Friendly */
+        .btn-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 36px;
+            height: 36px;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            opacity: 0.9; /* Tetap terlihat sedikit agar user mobile tahu ada tombol */
+            z-index: 10;
+        }
+        .btn-delete i { font-size: 16px; pointer-events: none; }
+        
+        @media (hover: hover) {
+            .btn-delete { opacity: 0; }
+            .asset-item:hover .btn-delete { opacity: 1; }
         }
 
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-            gap: 20px; 
-            max-height: 500px; 
-            overflow-y: auto; 
-            padding-right: 10px;
-        }
-
-        /* Custom Scrollbar */
-        .grid::-webkit-scrollbar { width: 6px; }
-        .grid::-webkit-scrollbar-track { background: transparent; }
-        .grid::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-
-        .asset-card { 
-            background: #25282c; 
-            padding: 15px; 
-            border-radius: 12px; 
-            text-align: center; 
-            border: 1px solid var(--border); 
-            transition: 0.3s;
-        }
-        .asset-card:hover { 
-            border-color: var(--blue); 
-            transform: translateY(-5px);
-            background: #2c3136;
-        }
-
-        .asset-card img { 
-            width: 100%; 
-            height: 100px; 
-            object-fit: contain; 
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
-        }
-
-        .asset-name {
-            font-size: 11px; 
-            margin-top: 12px; 
-            color: #777; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis;
-        }
+        .btn-delete:hover { background: var(--danger); color: white; transform: scale(1.1); }
+        .btn-delete:active { transform: scale(0.9); }
 
         @media (max-width: 600px) {
-            .container { padding: 20px; }
-            .header-area { flex-direction: column; gap: 15px; }
-        }
+    .main-card { 
+        padding: 20px 15px; 
+        margin: 0; 
+        border-radius: 0;
+    }
+    
+    .asset-grid { 
+        /* Di HP dipaksa 3 kolom jika layar cukup, atau minimal 2 kolom bersih */
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+        gap: 10px;
+    }
+
+    .header-content h2 { font-size: 22px; }
+    
+    .upload-container {
+        padding: 25px 15px;
+        margin-bottom: 30px;
+    }
+}
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header-area">
-            <div>
-                <h2>Asset Library</h2>
-                <h3>Kelola ikon untuk denah digital</h3>
-            </div>
-            <a href="edit_denah.php?id=<?= $back_id ?>&table=<?= $back_table ?>" class="btn btn-back">
-                ⬅ Kembali ke Editor
+    <div class="main-card">
+        <div class="close-wrapper">
+            <a href="edit_denah.php?id=<?= urlencode($back_id) ?>&table=<?= urlencode($back_table) ?>" class="btn-x" title="Close Library">
+                <i class="fa-solid fa-xmark fa-lg"></i>
             </a>
         </div>
+
+        <div class="header-content">
+            <h2>Asset Library</h2>
+            <p>Unggah dan kelola koleksi ikon denah digital Anda</p>
+        </div>
         
-        <form action="" method="post" enctype="multipart/form-data" class="upload-box">
-            <input type="hidden" name="back_id" value="<?= $back_id ?>">
-            <input type="hidden" name="back_table" value="<?= $back_table ?>">
+        <form action="" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="back_id" value="<?= htmlspecialchars($back_id) ?>">
+            <input type="hidden" name="back_table" value="<?= htmlspecialchars($back_table) ?>">
             
-            <p style="margin-bottom: 20px; color: #aaa;">Pilih file gambar (PNG transparan sangat disarankan)</p>
-            <input type="file" name="new_asset" accept="image/*" required><br>
-            <button type="submit" class="btn btn-blue">🚀 Unggah ke Library</button>
+            <div class="upload-container">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 38px; color: var(--primary); margin-bottom: 20px; display: block;"></i>
+                <label class="file-input-label">Pilih gambar (PNG, JPG, atau WEBP)</label>
+                <input type="file" name="new_asset" accept="image/*" required style="margin-bottom: 20px;"><br>
+                <button type="submit" class="btn-upload">
+                    <i class="fa-solid fa-plus"></i> Tambah Ke Library
+                </button>
+            </div>
         </form>
 
-        <div class="grid-title">
-            <span style="font-weight: 600; color: #fff;">File yang tersedia</span>
-            <span style="font-size: 12px; color: #666;">Format: PNG, JPG, WEBP</span>
+        <div class="grid-info">
+            <span>Koleksi Aset</span>
+            <span style="font-size: 11px; opacity: 0.6;"><?= count(glob("assets/items/*.*")) ?> Items</span>
         </div>
 
-        <div class="grid">
+        <div class="asset-grid">
             <?php
             $files = glob("assets/items/*.{jpg,png,jpeg,gif,webp}", GLOB_BRACE);
             if(empty($files)) {
-                echo "<div style='grid-column: 1/-1; text-align: center; padding: 40px; color: #555;'>
-                        <p>Library masih kosong.</p>
+                echo "<div style='grid-column: 1/-1; text-align: center; padding: 60px 0; color: var(--text-muted); opacity: 0.5;'>
+                        <i class='fa-regular fa-folder-open' style='font-size: 40px; margin-bottom: 15px;'></i>
+                        <p>Belum ada aset tersedia</p>
                       </div>";
             } else {
-                // Urutkan berdasarkan file terbaru
+                // Sort by latest
                 array_multisort(array_map('filemtime', $files), SORT_DESC, $files);
                 
                 foreach($files as $file) {
                     $name = basename($file);
-                    echo "<div class='asset-card'>
-                            <img src='$file' alt='$name'>
-                            <div class='asset-name' title='$name'>$name</div>
-                          </div>";
+                    ?>
+                    <div class="asset-item">
+    <button type="button" class="btn-delete" onclick="handleDelete('<?= $name ?>')" aria-label="Hapus Aset">
+        <i class="fa-solid fa-trash-can"></i>
+    </button>
+    <img src="<?= $file ?>" alt="<?= $name ?>" loading="lazy">
+    <div class="name" title="<?= $name ?>"><?= $name ?></div>
+</div>
+                    <?php
                 }
             }
             ?>
         </div>
     </div>
 
-    <?php if(isset($_GET['status'])): ?>
     <script>
-        const status = "<?= $_GET['status'] ?>";
+        // Konfirmasi Hapus - User Friendly
+        function handleDelete(fileName) {
+            Swal.fire({
+                title: 'Hapus Aset?',
+                text: "File " + fileName + " akan dihapus selamanya.",
+                icon: 'warning',
+                showCancelButton: true,
+                reverseButtons: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#2d3748',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                background: '#161e2d',
+                color: '#f8fafc',
+                backdrop: `rgba(0,0,0,0.8)`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `upload_asset.php?delete=${fileName}&id=<?= urlencode($back_id) ?>&table=<?= urlencode($back_table) ?>`;
+                }
+            })
+        }
+
+        // Alert Notifikasi dari URL Status
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        const toastConfig = {
+            background: '#161e2d',
+            color: '#f8fafc',
+            confirmButtonColor: '#3b82f6',
+        };
+
         if(status === 'success') {
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Asset baru telah ditambahkan ke library.',
-                icon: 'success',
-                confirmButtonColor: '#3498db'
-            });
+            Swal.fire({ ...toastConfig, title: 'Berhasil!', text: 'Aset baru telah ditambahkan.', icon: 'success' });
+        } else if(status === 'deleted') {
+            Swal.fire({ ...toastConfig, title: 'Terhapus', text: 'Aset berhasil dibuang dari library.', icon: 'success' });
         } else if(status === 'invalid') {
-            Swal.fire({
-                title: 'Format Salah',
-                text: 'Gunakan format gambar JPG, PNG, atau WEBP.',
-                icon: 'error',
-                confirmButtonColor: '#3498db'
-            });
+            Swal.fire({ ...toastConfig, title: 'Format Salah', text: 'Mohon unggah file gambar yang valid.', icon: 'error' });
         } else if(status === 'error') {
-            Swal.fire({
-                title: 'Gagal',
-                text: 'Terjadi kesalahan saat mengunggah file.',
-                icon: 'error',
-                confirmButtonColor: '#3498db'
-            });
+            Swal.fire({ ...toastConfig, title: 'Gagal', text: 'Terjadi gangguan saat mengunggah.', icon: 'error' });
         }
     </script>
-    <?php endif; ?>
 
 </body>
 </html>
