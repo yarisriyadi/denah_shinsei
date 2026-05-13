@@ -5,6 +5,9 @@ $selected_floor = isset($_GET['floor']) ? $_GET['floor'] : 'denah_lantai_1';
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    
+        <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Upload Management | Shinsei Map</title>
@@ -34,7 +37,6 @@ $selected_floor = isset($_GET['floor']) ? $_GET['floor'] : 'denah_lantai_1';
             overflow-x: hidden;
         }
 
-        /* Container Animasi */
         .card { 
             background: var(--glass);
             backdrop-filter: blur(12px);
@@ -92,7 +94,6 @@ $selected_floor = isset($_GET['floor']) ? $_GET['floor'] : 'denah_lantai_1';
             margin-top: 6px;
         }
 
-        /* Styling Form */
         .form-group { 
             margin-bottom: 20px; 
         }
@@ -128,7 +129,6 @@ $selected_floor = isset($_GET['floor']) ? $_GET['floor'] : 'denah_lantai_1';
             background: #fff;
         }
 
-        /* Custom File Upload Appearance */
         .file-input-wrapper {
             position: relative;
             background: #f8fafc;

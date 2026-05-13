@@ -14,11 +14,8 @@ $newDescriptor = $data['descriptor'];
 
 $query = "SELECT nama, descriptor FROM data_wajah";
 $result = mysqli_query($conn, $query);
-
 $found = false;
 $foundNama = "";
-
-// pengecekan pendaftaran supaya lebih mudah mendeteksi duplikat
 $threshold = 0.50; 
 
 if ($result) {

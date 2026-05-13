@@ -5,14 +5,29 @@ if (!isset($_SESSION['terverifikasi']) || $_SESSION['terverifikasi'] !== true) {
     header("Location: verifikasi.php");
     exit();
 }
-
 include 'koneksi.php';
+
+$id_terdeteksi = $_SESSION['user_id'] ?? $_POST['id'] ?? null;
+
+$namaUser = "Guest"; 
+
+if ($id_terdeteksi) {
+    $query = "SELECT nama FROM data_wajah WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $id_terdeteksi);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $namaUser = $row['nama'];
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
-
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -46,22 +61,43 @@ include 'koneksi.php';
             color: white; 
             height: 100vh; 
             display: flex;
-        flex-direction: column;
+            flex-direction: column;
             z-index: 2000; 
             border-right: 1px solid rgba(255,255,255,0.05);
             transition: transform 0.3s ease; 
         }
         .sidebar-header { 
-            padding: 35px 25px; 
+            padding: 25px 15px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            gap: 10px;
         }
         .brand { 
-            font-size: 22px; 
+            font-size: 18px; 
             font-weight: 800; 
-            letter-spacing: 1px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; color: white; 
-            margin: 0; }
+            margin: 0;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            padding: 5px 0; 
+        }
+        .brand-logo {
+            height: 75px; 
+            width: auto;  
+            object-fit: contain;
+            display: block;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .brand-logo:hover {
+            transform: scale(1.05); 
+            filter: brightness(1.2);
+        }
+        .brand-logo:active {
+            transform: scale(0.95); 
+        }
+
         .brand span { 
             color: var(--blue); 
         }
@@ -79,7 +115,7 @@ include 'koneksi.php';
         }
         .sub-item { 
             font-size: 13px;
-    padding: 10px 15px;
+            padding: 10px 15px;
             cursor: pointer; 
             background: var(--item-bg);
             border: 1px solid rgba(255,255,255,0.05); 
@@ -132,8 +168,8 @@ include 'koneksi.php';
             background: rgba(0,0,0,0.2); 
         }
         .sub-child { 
-           font-size: 11px; 
-    padding: 8px 18px 8px 50px; 
+            font-size: 11px; 
+            padding: 8px 18px 8px 50px; 
             color: var(--text-dim); 
             cursor: pointer; 
             display: flex; 
@@ -221,14 +257,13 @@ include 'koneksi.php';
             flex: 1; 
             position: relative; 
             display: flex;
-    flex-direction: column;
-    height: 100vh;
-    position: relative;
+            flex-direction: column;
+            height: 100vh;
             background: #1a1c1e;
             width: 100%; 
         }
         #map { 
-        flex-grow: 1; 
+            flex-grow: 1; 
             width: 100%; 
             height: 100%; 
             outline: none; 
@@ -273,21 +308,52 @@ include 'koneksi.php';
             font-family: inherit;
         }
         #mobile-menu-btn {
-            display: none;
-            position: absolute; 
-            bottom: 20px; 
-            left: 20px; 
-            z-index: 2500;
-            background: var(--blue); 
-            color: white; 
-            border: none;
-            width: 50px; 
-            height: 50px; 
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            font-size: 20px; 
-            cursor: pointer;
-        }
+    display: none; 
+    position: fixed; 
+    bottom: 20px; 
+    left: 20px; 
+    z-index: 2500;
+    background: var(--blue); 
+    border: none;
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    padding: 0; 
+    outline: none;
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease; 
+}
+
+.hamburger-icon {
+    display: inline-block;
+    font-size: 24px;
+    line-height: 1;
+    color: white; 
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+#mobile-menu-btn.rotated {
+    background: #1c1f22; 
+    border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+#mobile-menu-btn.rotated .hamburger-icon {
+    transform: rotate(90deg); 
+    color: var(--red); 
+}
+
+.brand-logo {
+    height: 75px; 
+    width: auto;  
+    object-fit: contain;
+    display: block;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    content: url('assets/icon.webp'); 
+}
         @media (max-width: 768px) {
             #sidebar {
                 position: fixed;
@@ -297,7 +363,9 @@ include 'koneksi.php';
                 box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             }
             #sidebar.active { transform: translateX(0); }
-            #mobile-menu-btn { display: block; }
+#mobile-menu-btn { 
+        display: flex; /* Tampilkan tombol sebagai flexbox di mobile */
+    }
             .map-label { 
                 left: 15px; top: 15px; font-size: 11px; padding: 6px 12px;
                 max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -306,47 +374,190 @@ include 'koneksi.php';
                 padding: 8px 12px; font-size: 11px; top: 10px; right: 10px;
                 max-width: 120px;
             }
+            .brand { font-size: 16px; }
+            .sidebar-header { padding: 20px 12px; }
+            .user-name-label { max-width: 60px; }
+            .brand-logo {
+                height: 75px; 
+            }
+        }
+
         @media print {
             #sidebar, .btn-print, #mobile-menu-btn { display: none !important; }
         }
+
         body.swal2-shown {
-    height: 100vh !important;
-    overflow: hidden !important;
-}
-}
-.swal2-container {
-    z-index: 9999 !important;
-}
-body.swal2-shown {
-    overflow: hidden !important;
-    padding-right: 0 !important;
-}
-.btn-edit-canvas {
-    font-size: 14px;
-    opacity: 0.6;
-    transition: 0.3s;
-    padding: 2px 5px;
-    border-radius: 4px;
-}
+            height: 100vh !important;
+            overflow: hidden !important;
+        }
 
-.sub-child:hover .btn-edit-canvas, 
-.sub-item:hover .btn-edit-canvas {
-    opacity: 1;
-}
+        .swal2-container {
+            z-index: 9999 !important;
+        }
+        body.swal2-shown {
+            overflow: hidden !important;
+            padding-right: 0 !important;
+        }
+        .btn-edit-canvas {
+            font-size: 14px;
+            opacity: 0.6;
+            transition: 0.3s;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .sub-child:hover .btn-edit-canvas, 
+        .sub-item:hover .btn-edit-canvas {
+            opacity: 1;
+        }
+        .btn-edit-canvas:hover {
+            background: rgba(46, 204, 113, 0.2);
+            transform: scale(1.2);
+        }
+        .user-dropdown {
+            position: relative;
+            margin-top: 0;
+        }
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .user-trigger:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--blue);
+        }
+        .user-avatar-wrapper {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .user-name-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            max-width: 80px; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chevron-icon {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .user-menu-content {
+            display: none;
+            position: absolute;
+            top: 110%;
+            right: 0; 
+            width: 160px;
+            background: #1c1f22;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 3000;
+        }
+        .user-menu-content.show {
+            display: block;
+            animation: slideIn 0.2s ease-out;
+        }
+        .menu-greeting {
+            padding: 12px 15px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .menu-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.05);
+          
+        }
+        .user-menu-content a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .user-menu-content a:hover {
+            background: var(--blue);
+        }
+        .logout-link:hover {
+            background: var(--red) !important;
+        }
 
-.btn-edit-canvas:hover {
-    background: rgba(46, 204, 113, 0.2);
-    transform: scale(1.2);
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #welcome-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1c1e; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999; 
+    color: var(--text-dim);
+    text-align: center;
+    padding: 20px;
 }
-
-    </style>
+#welcome-screen svg {
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+.btn-print.hidden {
+    display: none;
+}
+</style>
 </head>
 <body>
 
-<button id="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Buka Menu Navigasi">☰</button>
-<div id="sidebar">
+<button id="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Buka Menu Navigasi">
+    <span class="hamburger-icon">☰</span>
+</button>
+    <div id="sidebar">
     <div class="sidebar-header">
-        <h1 class="brand">SHINSEI <span>MAP</span></h1>
+        <div class="brand">
+    <a href="index.php" style="display: block;">
+        <img src="assets/icon.webp" alt="Shinsei Map Logo" class="brand-logo">
+    </a>
+</div>
+
+        <div class="user-dropdown">
+            <div class="user-trigger" onclick="toggleUserMenu()">
+                <div class="user-avatar-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" stroke="#3498db" stroke-width="2"/>
+                        <circle cx="12" cy="8" r="4" fill="#3498db"/>
+                        <path d="M5 19C5 15.134 8.134 12 12 12C15.866 12 19 15.134 19 19" stroke="#3498db" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="user-name-label"><?= htmlspecialchars($namaUser) ?></span>
+                <span class="chevron-icon" style="font-size: 10px;">▾</span>
+            </div>
+
+            <div id="userMenu" class="user-menu-content">
+                <div class="menu-greeting">
+                    <span id="greeting-text">Halo</span>
+                    <strong><?= htmlspecialchars($namaUser) ?></strong>
+                </div>
+                <div class="menu-divider"></div>
+                <a href="profile.php">👤 Profile</a>
+                <a href="logout.php" class="logout-link">⬅️ Keluar</a>
+            </div>
+        </div>
     </div>
 
     <div class="sidebar-content">
@@ -357,7 +568,6 @@ body.swal2-shown {
                 $masterQuery = mysqli_query($conn, "SELECT * FROM $tableName WHERE parent_id = 0 ORDER BY id ASC");
                 while ($master = mysqli_fetch_assoc($masterQuery)) {
                     $mID = $kode . '_' . $master['id']; 
-        
                     ?>
                     
                     <div class="denah-group" id="group-<?= $mID ?>">
@@ -369,7 +579,7 @@ body.swal2-shown {
                             <div style="display:flex; align-items:center; gap: 8px;">
                                 <a href="javascript:void(0)" class="btn-edit" onclick="renameItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">✎</a>
                                 <a href="javascript:void(0)" class="btn-delete" onclick="deleteItem(event, '<?= $master['id'] ?>', '<?= $tableName ?>', '<?= htmlspecialchars($master['nama_lantai']) ?>')">×</a>
-                                                                        <a href="edit_denah.php?id=<?= $master['id'] ?>&table=<?= $tableName ?>" class="btn-edit" style="color: #2ecc71; opacity: 1;" title="Edit Layout">🎨</a>
+                                <a href="edit_denah.php?id=<?= $master['id'] ?>&table=<?= $tableName ?>" class="btn-edit" style="color: #2ecc71; opacity: 1;" title="Edit Layout">🎨</a>
 
                             </div>
                         </div>
@@ -433,101 +643,110 @@ body.swal2-shown {
     const Toast = Swal.mixin({
     focusConfirm: false,
 });
+
+var map = L.map('map', {
+    crs: L.CRS.Simple,
+    minZoom: 0,
+    maxZoom: 4,
+    zoomSnap: 0.1,
+    attributionControl: false,
+    zoomControl: true
+});
+
+var currentOverlay = null;
     
-    var map = L.map('map', {
-        crs: L.CRS.Simple, 
-        minZoom: 0,
-        maxZoom: 4, 
-        zoomSnap: 0.1,
-        attributionControl: false, 
-        zoomControl: true 
+    function toggleUserMenu() {
+    const menu = document.getElementById('userMenu');
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+}
+
+function handleMapLoad(file, w, h, judul, element) {
+    loadMap(file, w, h, judul, element);
+    if (window.innerWidth <= 768) {
+        toggleSidebar();
+    }
+}
+
+function toggleSub(id) {
+    var container = document.getElementById('child-' + id);
+    var group = document.getElementById('group-' + id);
+    
+    document.querySelectorAll('.child-container').forEach(el => { 
+        if (el.id !== 'child-' + id) el.style.display = 'none'; 
+    });
+    document.querySelectorAll('.denah-group').forEach(el => { 
+        if (el.id !== 'group-' + id) el.classList.remove('open'); 
     });
 
-    var currentOverlay = null;
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('active');
+    if (container.style.display === "block") {
+        container.style.display = "none";
+        group.classList.remove('open');
+    } else {
+        container.style.display = "block";
+        group.classList.add('open');
     }
+}
 
-    function handleMapLoad(file, w, h, judul, element) {
-        loadMap(file, w, h, judul, element);
-        if (window.innerWidth <= 768) {
-            toggleSidebar(); 
-        }
-    }
-
-    function toggleSub(id) {
-        var container = document.getElementById('child-' + id);
-        var group = document.getElementById('group-' + id);
-        document.querySelectorAll('.child-container').forEach(el => { if(el.id !== 'child-' + id) el.style.display = 'none'; });
-        document.querySelectorAll('.denah-group').forEach(el => { if(el.id !== 'group-' + id) el.classList.remove('open'); });
-        if (container.style.display === "block") { container.style.display = "none"; group.classList.remove('open'); }
-        else { container.style.display = "block"; group.classList.add('open'); }
-    }
-
-    function loadMap(file, w, h, judul, element) {
+function loadMap(file, w, h, judul, element) {
     if (window.event && (window.event.target.classList.contains('btn-delete') || window.event.target.classList.contains('btn-edit'))) return;
-    
+    if (element.classList.contains('active')) return;
+
     document.getElementById('current-label').innerText = judul;
     document.querySelectorAll('.sub-item, .sub-child').forEach(i => i.classList.remove('active'));
     element.classList.add('active');
 
-    if(currentOverlay) map.removeLayer(currentOverlay);
-    
+    if (currentOverlay) map.removeLayer(currentOverlay);
+
     var sw = map.unproject([0, h], map.getMaxZoom());
     var ne = map.unproject([w, 0], map.getMaxZoom());
     var bounds = new L.LatLngBounds(sw, ne);
-    
-    // TAMBAHKAN TIMESTAMP DI SINI
-    var timestamp = new Date().getTime();
-    var imageUrl = 'uploads/' + file + '?v=' + timestamp;
-    
-    currentOverlay = L.imageOverlay(imageUrl, bounds).addTo(map);
+
+    // LOGIKA RENDER .WEBP: Menghapus ekstensi apapun dan menggantinya ke .webp
+    var fileNameWebp = file.substring(0, file.lastIndexOf('.')) + '.webp';
+    var imageUrl = 'uploads/' + fileNameWebp;
+
+    currentOverlay = L.imageOverlay(imageUrl, bounds, {
+        opacity: 0, 
+        alt: judul,
+        interactive: true
+    }).addTo(map);
+
+    const imgNode = currentOverlay.getElement();
+    if (imgNode) {
+        imgNode.style.transition = "opacity 0.5s";
+        imgNode.onload = function() {
+            this.style.opacity = "1";
+        };
+    }
     map.fitBounds(bounds);
 }
-var preloadedImages = [];
 
-function preloadDenahImages() {
-    const items = document.querySelectorAll('[onclick*="handleMapLoad"]');
-    
-    items.forEach(item => {
-        const onclickAttr = item.getAttribute('onclick');
-        const match = onclickAttr.match(/'([^']+)'/);
-        
-        if (match && match[1]) {
-            const imgUrl = 'uploads/' + match[1];
-            const img = new Image();
-            img.src = imgUrl;
-            preloadedImages.push(img); 
-        }
-    });
-    console.log("Preloading " + preloadedImages.length + " gambar selesai.");
-}
+document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+    this.classList.toggle('rotated');
+});
 
-    function renameItem(event, id, table, oldName) {
+function renameItem(event, id, table, oldName) {
     event.stopPropagation();
-
     Swal.fire({
         title: 'Ubah Nama',
         input: 'text',
         inputValue: oldName,
         inputLabel: 'Masukkan nama baru untuk denah ini',
         showCancelButton: true,
-        reverseButtons: true,
         confirmButtonText: 'Simpan',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#3498db',
-        cancelButtonColor: '#ff4757',
         background: '#1a1c1e',
         color: '#ffffff',
-        // Tambahan agar tidak terganggu keyboard mobile
-        heightAuto: false, 
         preConfirm: (newName) => {
             if (!newName || newName.trim() === "") {
                 Swal.showValidationMessage('Nama tidak boleh kosong!');
                 return false;
             }
-
             const formData = new FormData();
             formData.append('id', id);
             formData.append('table', table);
@@ -537,56 +756,36 @@ function preloadDenahImages() {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Gagal menghubungi server');
-                return response.json();
-            })
-            .catch(error => {
-                Swal.showValidationMessage(`Request failed: ${error}`);
-            });
+            .then(response => response.json())
+            .catch(error => Swal.showValidationMessage(`Gagal: ${error}`));
         }
     }).then((result) => {
         if (result.isConfirmed && result.value.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: 'Nama telah diperbarui.',
-                timer: 1500,
-                showConfirmButton: false,
-                background: '#1a1c1e',
-                color: '#ffffff'
-            }).then(() => location.reload());
+            location.reload();
         }
     });
 }
 
 function deleteItem(event, id, table, name) {
     event.stopPropagation();
-
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: `Denah "${name}" akan dihapus secara permanen!`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ff4757',
-        cancelButtonColor: '#3498db',
         confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
         background: '#1a1c1e',
         color: '#ffffff',
-        reverseButtons: true,
-        heightAuto: false
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // Tampilkan loading saat proses hapus
             Swal.fire({
                 title: 'Menghapus...',
                 allowOutsideClick: false,
                 background: '#1a1c1e',
                 color: '#ffffff',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => { Swal.showLoading(); }
             });
 
             fetch(`hapus.php?id=${id}&table=${table}`)
@@ -595,39 +794,25 @@ function deleteItem(event, id, table, name) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Terhapus!',
-                            text: 'Data telah berhasil dihapus.',
                             timer: 1500,
                             showConfirmButton: false,
                             background: '#1a1c1e',
                             color: '#ffffff'
                         }).then(() => location.reload());
                     } else {
-                        throw new Error('Gagal menghapus data dari server.');
+                        throw new Error('Gagal menghapus data.');
                     }
                 })
                 .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: error.message,
-                        background: '#1a1c1e',
-                        color: '#ffffff'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: error.message });
                 });
         }
     });
 }
 
-    async function printUltraHighResDenah() {
+async function printUltraHighResDenah() {
     if (!currentOverlay) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Oops...',
-            text: 'Silakan pilih denah terlebih dahulu!',
-            background: '#1a1c1e',
-            color: '#fff',
-            confirmButtonColor: '#3498db'
-        });
+        Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Pilih denah dulu!', background: '#1a1c1e', color: '#fff' });
         return;
     }
 
@@ -636,27 +821,19 @@ function deleteItem(event, id, table, name) {
     const judul = document.getElementById('current-label').innerText;
 
     Swal.fire({
-        title: 'Sedang Memproses...',
-        html: 'Mohon tunggu, sedang menghasilkan PDF kualitas tinggi.',
-        allowOutsideClick: false,
+        title: 'Memproses PDF...',
+        didOpen: () => { Swal.showLoading(); },
         background: '#1a1c1e',
-        color: '#fff',
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        color: '#fff'
     });
 
     btn.disabled = true;
 
     try {
         const imgElement = currentOverlay.getElement();
-
         const canvas = await html2canvas(imgElement, {
             useCORS: true,
-            backgroundColor: null,
-            scale: 5,             
-            logging: false,
-            imageTimeout: 0
+            scale: 5
         });
 
         const imgData = canvas.toDataURL('image/png', 1.0);
@@ -676,44 +853,40 @@ function deleteItem(event, id, table, name) {
             printWidth = pageHeight * ratio;
         }
 
-        const xPos = (pageWidth - printWidth) / 2;
-        const yPos = (pageHeight - printHeight) / 2;
-
-        pdf.addImage(imgData, 'PNG', xPos, yPos, printWidth, printHeight, undefined, 'NONE');
+        pdf.addImage(imgData, 'PNG', (pageWidth - printWidth) / 2, (pageHeight - printHeight) / 2, printWidth, printHeight);
         pdf.save(`Denah_${judul.replace(/[^a-z0-9]/gi, '_')}.pdf`);
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'Denah telah berhasil diekspor ke PDF.',
-            background: '#1a1c1e',
-            color: '#fff',
-            confirmButtonColor: '#2ecc71',
-            timer: 2000,
-            showConfirmButton: false
-        });
-
+        Swal.close();
     } catch (err) {
-        console.error(err);
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal Export',
-            text: err.message,
-            background: '#1a1c1e',
-            color: '#fff',
-            confirmButtonColor: '#e74c3c'
-        });
+        Swal.fire({ icon: 'error', title: 'Gagal Export', text: err.message });
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
 }
 
-   window.onload = function() {
-    preloadDenahImages();
+function setGreeting() {
+    const hour = new Date().getHours();
+    const greetingElement = document.getElementById('greeting-text');
+    let greeting = hour < 11 ? "☀️ Selamat Pagi," : hour < 15 ? "🌤️ Selamat Siang," : hour < 18 ? "⛅ Selamat Sore," : "🌙 Selamat Malam,";
+    
+    if(greetingElement) greetingElement.innerHTML = greeting;
+}
+
+window.onload = function() {
+    setGreeting();
     const firstItem = document.querySelector('.sub-item');
     if(firstItem) firstItem.click();
 };
+
+window.addEventListener('click', function(e) {
+    const userMenu = document.getElementById('userMenu');
+    if (userMenu && !document.querySelector('.user-dropdown').contains(e.target)) {
+        userMenu.classList.remove('show');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', setGreeting);
 function deleteItem(event, id, table, name) {
     event.stopPropagation(); 
 
@@ -775,29 +948,6 @@ function deleteItem(event, id, table, name) {
         }
     });
 }
-let inactivityTime = function () {
-    let time;
-    
-    const timeoutDuration = 1 * 60 * 1000; 
-
-    function logout() {
-        window.location.href = 'logout.php'; 
-    }
-
-    function resetTimer() {
-        clearTimeout(time);
-        time = setTimeout(logout, timeoutDuration);
-    }
-
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onkeypress = resetTimer;
-    document.onclick = resetTimer;
-    document.ontouchstart = resetTimer; 
-};
-
-inactivityTime();
-
 </script>
 </body>
 </html>

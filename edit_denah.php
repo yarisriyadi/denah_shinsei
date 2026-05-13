@@ -3,7 +3,6 @@ session_start();
 if (!isset($_SESSION['terverifikasi'])) { header("Location: verifikasi.php"); exit(); }
 include 'koneksi.php';
 
-
 $id = $_GET['id'] ?? '';
 $table = $_GET['table'] ?? '';
 if (!$id || !$table) { die("Data tidak ditemukan."); }
@@ -31,7 +30,7 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             --blue-light: #dbeafe;
             --blue-hover: #1d4ed8;
             --panel: #ffffff;
-            --bg-workspace: #f8fafc;
+            --bg-workspace: #d1d5db;
             --dark-text: #1e293b;
             --border: #e2e8f0;
             --text-muted: #64748b;
@@ -53,7 +52,6 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             overflow: hidden;
         }
 
-        /* --- GAMBAR 1: TOOLBAR STYLE --- */
         .toolbar {
             height: var(--toolbar-height);
             background: var(--panel);
@@ -115,7 +113,6 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             padding: 0 10px;
         }
 
-        /* --- GAMBAR 2: SIDEBAR & ASSET STYLE --- */
         .workspace {
             display: flex;
             flex: 1;
@@ -135,19 +132,46 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
         }
 
         .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
 
-        .sidebar-header h4 {
-            margin: 0;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-        }
+.sidebar-header h4 {
+    margin: 0;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+        .sidebar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-close-sidebar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #f1f5f9;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-close-sidebar:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fecaca;
+}
 
         .item-grid {
             display: grid;
@@ -180,7 +204,6 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             background: var(--blue-light);
         }
 
-        /* Range Slider Styling */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -200,7 +223,6 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             transition: 0.2s;
         }
 
-        /* --- DEVICE SYNC (MOBILE OPTIMIZATION) --- */
         @media (max-width: 768px) {
             :root { --toolbar-height: 60px; --sidebar-width: 260px; }
             
@@ -221,20 +243,19 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
                 transform: translateX(-100%);
             }
             
-            /* --- PERUBAHAN GAYA TOMBOL TOGEL --- */
 .toggle-overlay {
     display: flex;
     position: absolute;
-    top: 50%; /* Posisikan di tengah secara vertikal */
+    top: 50%;
     left: 10px;
     transform: translateY(-50%);
     z-index: 1100;
 }
 
 .btn-toggle-custom {
-    width: 32px; /* Ukuran lebih kecil */
+    width: 32px; 
     height: 32px;
-    border-radius: 8px; /* Sudut sedikit membulat */
+    border-radius: 8px;
     background: var(--panel);
     color: var(--blue);
     border: 1px solid var(--border);
@@ -251,17 +272,14 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
     transform: scale(1.1);
 }
 
-/* Penyesuaian di Desktop */
 @media (min-width: 769px) {
     .toggle-overlay {
-        left: 20px; /* Jarak sedikit lebih lebar di desktop */
+        left: 20px;
     }
 }         
             .denah-title { font-size: 14px; }
         }
-
-        /* Canvas & Viewport Logic */
-        .viewport { flex: 1; position: relative; overflow: hidden; background: var(--bg-workspace); touch-action: none; }
+        .viewport { flex: 1; position: relative; overflow: hidden; background: #d1d5db; touch-action: none; }
         #canvas-wrapper { 
             position: absolute; 
             transform-origin: 0 0; 
@@ -283,10 +301,20 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
             padding: 12px; margin-bottom: 12px; border-radius: 8px; font-family: inherit;
         }
 
-        #ghost-preview { position: fixed; pointer-events: none; opacity: 0.6; display: none; z-index: 1000; transform: translate(-50%, -50%); }
+        #ghost-preview { 
+            position: fixed; 
+            pointer-events: none; 
+            opacity: 0.6; display: none; 
+            z-index: 9999; 
+            transform: translate(-50%, -50%); 
+        }
+        #ghost-preview, #eraser-cursor, #canvas-wrapper {
+    will-change: transform, left, top;
+    pointer-events: none; 
+}
         #eraser-cursor { position: fixed; pointer-events: none; border: 2px solid var(--blue); border-radius: 50%; display: none; z-index: 1001; transform: translate(-50%, -50%); background: rgba(52, 152, 219, 0.1); }
         .zoom-info { position: absolute; bottom: 20px; right: 80px; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); padding: 6px 16px; border-radius: 30px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); color: var(--text-muted); }
-        
+   
         .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -298,13 +326,10 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
         }
         .btn-reset-view:hover { background: #f8fafc; color: var(--blue); }
         
-        /* Update style untuk tombol toggle */
 .toggle-overlay button i {
     transition: transform 0.3s ease;
 }
 
-/* Sembunyikan toggle overlay di desktop secara default jika sidebar muncul, 
-   atau sesuaikan agar tetap ada sesuai keinginan Anda */
 @media (min-width: 769px) {
     .toggle-overlay {
         display: flex;
@@ -313,7 +338,6 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
         left: 24px;
         z-index: 1100;
     }
-    /* Geser viewport/sidebar saat kolaps di desktop jika diperlukan */
     .sidebar.collapsed {
         margin-left: calc(var(--sidebar-width) * -1);
     }
@@ -362,14 +386,17 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
 </div>
 
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-    <h4>Assets Library</h4>
-    <div style="display: flex; gap: 8px;">
-        <button class="btn" onclick="location.href='upload_asset.php?id=<?= urlencode($id) ?>&table=<?= urlencode($table) ?>'" style="padding: 6px 10px; font-size: 11px; background: #f1f5f9;">
-            <i class="fa-solid fa-plus"></i> Upload
-        </button>
+    <div class="sidebar-header">
+        <h4>ASSET</h4>
+        <div class="sidebar-actions">
+            <button class="btn" onclick="location.href='upload_asset.php?id=<?= urlencode($id) ?>&table=<?= urlencode($table) ?>'" style="padding: 6px 12px; font-size: 12px; background: var(--blue); color: white; border: none;">
+                <i class="fa-solid fa-plus"></i> Upload
+            </button>
+            <button class="btn-close-sidebar" onclick="toggleSidebar()" title="Tutup Menu">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-</div>
+    </div>
 
         <div class="item-grid">
             <?php
@@ -405,18 +432,22 @@ $namaDenah = !empty($data['nama_lantai']) ? $data['nama_lantai'] : ($data['keter
         <div class="zoom-info"><i class="fa-solid fa-magnifying-glass"></i> <span id="zoomPercent">100%</span></div>
 
         <div id="text-bubble">
-            <input type="text" id="target-text-input" placeholder="Ketik teks di sini...">
-            <div style="display: flex; gap: 8px;">
-                <button class="btn btn-blue" onclick="confirmText()" style="flex: 1; justify-content: center;">Terapkan</button>
-                <button class="btn" onclick="cancelText()" style="flex: 1; justify-content: center;">Batal</button>
-            </div>
-        </div>
+    <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">WARNA:</span>
+        <button onclick="setTextColor('black')" id="color-black" style="width: 24px; height: 24px; border-radius: 50%; background: black; border: 2px solid var(--blue); cursor: pointer;"></button>
+        <button onclick="setTextColor('red')" id="color-red" style="width: 24px; height: 24px; border-radius: 50%; background: red; border: 2px solid transparent; cursor: pointer;"></button>
+    </div>
+    <input type="text" id="target-text-input" placeholder="Ketik teks di sini...">
+    <div style="display: flex; gap: 8px;">
+        <button class="btn btn-blue" onclick="confirmText()" style="flex: 1; justify-content: center;">Terapkan</button>
+        <button class="btn" onclick="cancelText()" style="flex: 1; justify-content: center;">Batal</button>
+    </div>
+</div>
     </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// -- LOGIKA ASLI TIDAK DIUBAH --
 const viewport = document.getElementById('viewport');
 const wrapper = document.getElementById('canvas-wrapper');
 const canvas = document.getElementById('canvasEditor');
@@ -434,6 +465,13 @@ let undoStack = [];
 const maxUndo = 20;
 let activeText = null;
 let isDraggingText = false;
+
+let stampRotation = 0; 
+let initialTouchAngle = 0;
+let initialStampAngle = 0;
+let lastTouchDistance = 0;
+let touchStartTime = 0;
+let isMultiTouch = false; 
 
 const img = new Image();
 img.src = '<?= $filePath ?>?' + new Date().getTime();
@@ -474,14 +512,14 @@ function drawFloatingText() {
     ctx.strokeStyle = "white";
     ctx.lineWidth = activeText.size * 0.1;
     ctx.strokeText(activeText.content, activeText.x, activeText.y);
-    ctx.fillStyle = "black";
+    ctx.fillStyle = activeText.color || 'black';
     ctx.fillText(activeText.content, activeText.x, activeText.y);
     ctx.restore();
 }
 
 function saveState() {
     if (undoStack.length >= maxUndo) undoStack.shift();
-    undoStack.push(canvas.toDataURL('image/png'));
+    undoStack.push(canvas.toDataURL('image/webp'));
 }
 
 function undo() {
@@ -499,11 +537,8 @@ function undo() {
 
 function updateTransform() {
     requestAnimationFrame(() => {
-        // Tambahkan pembulatan (Math.round) pada koordinat 
-        // untuk mencegah sub-pixel rendering yang bikin teks/garis bergetar
         const x = Math.round(originX);
         const y = Math.round(originY);
-        
         wrapper.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
         document.getElementById('zoomPercent').innerText = Math.round(scale * 100) + '%';
     });
@@ -511,45 +546,52 @@ function updateTransform() {
 
 function fitToView() {
     if (img.width === 0) return;
-    
-    // Set skala ke 10% (0.1) sesuai permintaan
-    scale = 0.1; 
-    
-    // Pusatkan denah
+    scale = 0.25; 
     originX = (viewport.clientWidth - canvas.width * scale) / 2;
     originY = (viewport.clientHeight - canvas.height * scale) / 2;
     updateTransform();
 }
 
+function getAngle(t1, t2) {
+    return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI;
+}
+
 function handleStart(e) {
     if (e.touches && e.touches.length === 2) {
-        // Inisialisasi jarak awal pinch
+        isMultiTouch = true;
         lastTouchDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
         );
-        isPanning = false; // Berhenti geser saat mulai zoom
+        if (mode === 'stamp') {
+            initialTouchAngle = getAngle(e.touches[0], e.touches[1]);
+            initialStampAngle = stampRotation;
+        }
+        isPanning = false;
         return;
     }
+
+    isMultiTouch = false;
+    touchStartTime = Date.now();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const p = getCoords(clientX, clientY);
+
     if (mode === 'text') {
         if (!activeText) {
             textBubble.style.display = 'block';
             textBubble.style.left = Math.min(clientX, window.innerWidth - 250) + 'px';
             textBubble.style.top = Math.min(clientY, window.innerHeight - 150) + 'px';
-            activeText = { x: p.x, y: p.y, content: '', size: brushSize / 2 };
+            activeText = { x: p.x, y: p.y, content: '', size: brushSize / 2, color: selectedTextColor };
             textInput.focus();
         } else {
             isDraggingText = true;
         }
-    } else if (mode === 'move') {
+    } 
+    else if (mode === 'move') {
         isPanning = true;
         startX = clientX - originX;
         startY = clientY - originY;
-    } else if (mode === 'stamp' && selectedItemSrc) {
-        placeStamp(clientX, clientY);
     } else if (mode === 'erase') {
         isPanning = true;
         doErase(clientX, clientY);
@@ -559,6 +601,19 @@ function handleStart(e) {
 function handleMove(e) {
     if (e.touches && e.touches.length === 2) {
         e.preventDefault();
+
+        if (mode === 'stamp' && selectedItemSrc) {
+            const currentAngle = getAngle(e.touches[0], e.touches[1]);
+            stampRotation = initialStampAngle + (currentAngle - initialTouchAngle);
+            ghost.style.transform = `translate(-50%, -50%) rotate(${stampRotation}deg)`;
+            
+            lastTouchDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            return; 
+        }
+
         const currentDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
@@ -567,29 +622,19 @@ function handleMove(e) {
         if (lastTouchDistance > 0) {
             const pinchScale = currentDistance / lastTouchDistance;
             const oldScale = scale;
-            const minScale = 0.1;
-            const maxScale = 5.0;
-
-            // Update scale
-            scale = Math.min(Math.max(minScale, scale * pinchScale), maxScale);
-
+            scale = Math.min(Math.max(0.2, scale * pinchScale), 5.0);
             if (scale !== oldScale) {
-                // Cari titik tengah di antara dua jari untuk titik pusat zoom
                 const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 const rect = viewport.getBoundingClientRect();
-
                 originX = (centerX - rect.left) - ((centerX - rect.left) - originX) * (scale / oldScale);
                 originY = (centerY - rect.top) - ((centerY - rect.top) - originY) * (scale / oldScale);
-
                 updateTransform();
             }
         }
         lastTouchDistance = currentDistance;
         return;
     }
-
-    // LOGIKA GESER & DRAW (SINGLE TOUCH/MOUSE)
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const p = getCoords(clientX, clientY);
@@ -610,8 +655,10 @@ function handleMove(e) {
 
     if (mode === 'stamp' && selectedItemSrc) {
         ghost.style.display = 'block';
-        ghost.style.left = clientX + 'px'; ghost.style.top = clientY + 'px';
+        ghost.style.left = clientX + 'px'; 
+        ghost.style.top = clientY + 'px';
         ghost.style.width = (brushSize * scale) + 'px';
+        ghost.style.transform = `translate(-50%, -50%) rotate(${stampRotation}deg)`;
     } else if (mode === 'erase') {
         eraserCursor.style.display = 'block';
         eraserCursor.style.left = clientX + 'px'; eraserCursor.style.top = clientY + 'px';
@@ -623,61 +670,103 @@ function handleMove(e) {
     }
 }
 
+function handleEnd(e) {
+    if (isPanning && mode === 'erase') saveState();
+    
+    if (mode === 'stamp' && selectedItemSrc && !isMultiTouch) {
+        const timeElapsed = Date.now() - touchStartTime;
+        if (timeElapsed < 300) { 
+            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            placeStamp(clientX, clientY);
+        }
+    }
+
+    isPanning = false;
+    isDraggingText = false;
+    isMultiTouch = false;
+}
+
 viewport.addEventListener('mousedown', handleStart);
 viewport.addEventListener('touchstart', (e) => { 
     if(e.touches.length <= 2) handleStart(e); 
 }, {passive: false});
+
 window.addEventListener('mousemove', handleMove);
 window.addEventListener('touchmove', (e) => { 
     if(e.touches.length <= 2) handleMove(e); 
 }, {passive: false});
-    window.addEventListener('mouseup', () => {
-    if (isPanning && mode === 'erase') saveState();
-    isPanning = false;
-    isDraggingText = false;
-});
-window.addEventListener('touchend', () => { if (isPanning && mode === 'erase') saveState(); isPanning = false; isDraggingText = false; });
 
-    viewport.addEventListener('wheel', e => {
+window.addEventListener('mouseup', handleEnd);
+window.addEventListener('touchend', handleEnd);
+
+viewport.addEventListener('wheel', e => {
     e.preventDefault();
+
+    if (mode === 'stamp' && selectedItemSrc) {
+        const rotationStep = e.deltaY > 0 ? -5 : 5; 
+        stampRotation = (stampRotation + rotationStep) % 360;
+        ghost.style.transform = `translate(-50%, -50%) rotate(${stampRotation}deg)`;
+        return; 
+    }
+
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const oldScale = scale;
-    const minScale = 0.1; // Batas minimal 10%
-    const maxScale = 5.0;
-    
-    scale = Math.min(Math.max(minScale, scale + delta), maxScale);
+    scale = Math.min(Math.max(0.2, scale + delta), 5.0);
     if (scale === oldScale) return;
-
     const rect = viewport.getBoundingClientRect();
     originX = (e.clientX - rect.left) - ((e.clientX - rect.left) - originX) * (scale / oldScale);
     originY = (e.clientY - rect.top) - ((e.clientY - rect.top) - originY) * (scale / oldScale);
-    
     updateTransform();
 }, { passive: false });
-    
-    window.addEventListener('load', () => {
-    const sidebar = document.getElementById('sidebar');
-    const toggleIcon = document.getElementById('toggleIcon');
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-        toggleIcon.className = 'fa-solid fa-bars';
-    } else {
-        toggleIcon.className = 'fa-solid fa-xmark';
-    }
+
+
+function updateToggleVisibility() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleOverlay = document.getElementById('toggleOverlay');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const isMobile = window.innerWidth <= 768;
+
+    if (sidebar.classList.contains('collapsed')) {
+        toggleOverlay.style.display = 'flex';
+        toggleIcon.className = 'fa-solid fa-bars';
+    } else {
+        if (isMobile) {
+            toggleOverlay.style.display = 'flex';
+            toggleIcon.className = 'fa-solid fa-xmark';
+        } else {
+            toggleOverlay.style.display = 'none';
+        }
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('collapsed');
+    updateToggleVisibility();
+}
+
+window.addEventListener('resize', updateToggleVisibility);
+
+window.addEventListener('load', () => {
+    if (window.innerWidth <= 768) {
+        document.getElementById('sidebar').classList.add('collapsed');
+    }
+    updateToggleVisibility();
 });
 
 function confirmText() {
-    if (textInput.value.trim() !== "") {
-        activeText.content = textInput.value;
-        textBubble.style.display = 'none';
-        redrawCanvas();
-    } else {
-        cancelText();
-    }
+    if (textInput.value.trim() !== "") {
+        activeText.content = textInput.value;
+        textBubble.style.display = 'none';
+        redrawCanvas();
+    } else {
+        cancelText();
+    }
 }
 
 function cancelText() {
-    activeText = null; textBubble.style.display = 'none'; textInput.value = ""; redrawCanvas();
+    activeText = null; textBubble.style.display = 'none'; textInput.value = ""; redrawCanvas();
 }
 
 sizeRange.oninput = function() {
@@ -705,12 +794,17 @@ function finalizeText() {
     if (!activeText) return;
     ctx.save();
     ctx.font = `bold ${activeText.size}px 'Plus Jakarta Sans', sans-serif`;
-    ctx.textBaseline = "middle"; ctx.textAlign = "center";
-    ctx.strokeStyle = "white"; ctx.lineWidth = activeText.size * 0.1;
+    ctx.textBaseline = "middle"; 
+    ctx.textAlign = "center";
+    ctx.strokeStyle = "white"; 
+    ctx.lineWidth = activeText.size * 0.1;
     ctx.strokeText(activeText.content, activeText.x, activeText.y);
-    ctx.fillStyle = "black"; ctx.fillText(activeText.content, activeText.x, activeText.y);
+    ctx.fillStyle = activeText.color || 'black'; 
+    ctx.fillText(activeText.content, activeText.x, activeText.y);
     ctx.restore();
-    activeText = null; textInput.value = ""; saveState();
+    activeText = null; 
+    textInput.value = ""; 
+    saveState();
 }
 
 function selectItem(el) {
@@ -719,7 +813,10 @@ function selectItem(el) {
     el.classList.add('selected');
     selectedItemSrc = el.src;
     ghost.src = el.src;
+    stampRotation = 0; // Reset rotasi untuk asset baru
     setMode('stamp');
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar.classList.contains('collapsed')) toggleSidebar(); 
 }
 
 function placeStamp(clientX, clientY) {
@@ -730,7 +827,12 @@ function placeStamp(clientX, clientY) {
         const ratio = stamp.naturalWidth / stamp.naturalHeight;
         let drawW = brushSize;
         let drawH = brushSize / ratio;
-        ctx.drawImage(stamp, p.x - drawW/2, p.y - drawH/2, drawW, drawH);
+        
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(stampRotation * Math.PI / 180);
+        ctx.drawImage(stamp, -drawW/2, -drawH/2, drawW, drawH);
+        ctx.restore();
         saveState();
     };
 }
@@ -747,61 +849,116 @@ function doErase(clientX, clientY) {
 
 function saveImage() {
     if(activeText) finalizeText();
+    
+    if (!navigator.onLine) {
+        Swal.fire('Offline', 'Tidak dapat menyimpan.', 'error');
+        return;
+    }
+
     Swal.fire({
         title: 'Simpan Denah?',
         text: 'Perubahan akan diterapkan pada database.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
+        reverseButtons: true,
         confirmButtonText: 'Ya, Simpan'
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-            const formData = new URLSearchParams();
-            formData.append('image', dataURL);
-            formData.append('id', '<?= $id ?>');
-            formData.append('table', '<?= $table ?>');
+            Swal.fire({ 
+                title: 'Menyimpan...', 
+                allowOutsideClick: false, 
+                didOpen: () => Swal.showLoading() 
+            });
 
-            fetch('save_denah_edit.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: formData.toString()
-})
-.then(res => res.json())
-.then(data => {
-    Swal.close();
-    if(data.success) {
-        Swal.fire('Berhasil!', 'Denah telah diperbarui.', 'success')
-        .then(() => {
-            // Mengarahkan pengguna ke halaman index.php
-            window.location.href = 'index.php'; 
-        });
-    } else {
-        Swal.fire('Gagal', data.message, 'error');
-    }
-});
+            // PERBAIKAN: Gunakan toBlob agar lebih ringan dan efisien
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'denah.webp');
+                formData.append('id', '<?= $id ?>');
+                formData.append('table', '<?= $table ?>');
+
+                fetch('save_denah_edit.php', {
+                    method: 'POST',
+                    body: formData // Mengirim FormData secara langsung
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.close();
+                    if(data.success) {
+                        Swal.fire('Berhasil!', 'Denah telah diperbarui.', 'success')
+                        .then(() => { window.location.href = 'index.php'; });
+                    } else {
+                        Swal.fire('Gagal', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.close();
+                    Swal.fire({
+                        title: 'Gagal Menyimpan',
+                        text: 'Ukuran file terlalu besar atau server menolak permintaan.',
+                        icon: 'error',
+                        confirmButtonText: 'Coba Lagi'
+                    });
+                });
+            }, 'image/jpeg', 0.85); // Kualitas 0.85 sudah cukup bagus
         }
     });
 }
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const toggleIcon = document.getElementById('toggleIcon');
-    
-    sidebar.classList.toggle('collapsed');
-    
-    if (sidebar.classList.contains('collapsed')) {
-        toggleIcon.className = 'fa-solid fa-bars'; // Ikon Menu saat tertutup
-    } else {
-        toggleIcon.className = 'fa-solid fa-arrow-left'; // Ikon panah ke kiri saat terbuka
-    }
+let selectedTextColor = 'black'; 
+function setTextColor(color) {
+    selectedTextColor = color;
+    document.getElementById('color-black').style.borderColor = (color === 'black') ? 'var(--blue)' : 'transparent';
+    document.getElementById('color-red').style.borderColor = (color === 'red') ? 'var(--blue)' : 'transparent';
+    if (activeText) { activeText.color = color; redrawCanvas(); }
 }
 
-// Menyesuaikan tampilan saat pertama kali muat di mobile
-if (window.innerWidth <= 768) {
-    document.getElementById('sidebar').classList.add('collapsed');
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if (mode === 'text' && activeText) cancelText();
+        else { setMode('move'); selectedItemSrc = null; }
+    }
+    // PC Shortcut: R untuk putar 45 derajat
+    if (e.key.toLowerCase() === 'r' && mode === 'stamp') {
+        stampRotation = (stampRotation + 45) % 360;
+    }
+    if (e.key === 'Enter') {
+        if (document.activeElement === textInput) confirmText();
+        else saveImage();
+    }
+});
+
+function checkNetworkStatus() {
+    if (!navigator.onLine) {
+        Swal.fire({
+            title: 'Koneksi Terputus!',
+            text: 'Pastikan Anda terhubung ke internet untuk menyimpan perubahan.',
+            icon: 'warning',
+            showConfirmButton: true,
+            confirmButtonText: 'Refresh Halaman',
+            allowOutsideClick: false,
+            confirmButtonColor: '#2563eb'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.reload();
+            }
+        });
+    }
 }
+
+window.addEventListener('offline', checkNetworkStatus);
+window.addEventListener('online', () => {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Koneksi kembali terhubung',
+        showConfirmButton: false,
+        timer: 3000
+    });
+});
 </script>
 </body>
 </html>

@@ -315,42 +315,80 @@
             }, 1000);
         }
 
-        async function handleRegistration(detection, nama) {
-            showStatus("Sinkronisasi data biometrik...", "process");
-            const descriptor = Array.from(detection.descriptor);
+        // Ganti fungsi handleRegistration lama Anda dengan versi ini
+async function handleRegistration(detection, nama) {
+    showStatus("Menangkap foto & sinkronisasi...", "process");
 
-            try {
-                const cek = await fetch('cek_wajah.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ descriptor })
-                });
-                const resCek = await cek.json();
+    // --- TAMBAHAN: Logika Capture Foto ---
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    // Mirroring balik agar foto tidak terbalik (karena video di-mirror di CSS)
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Ambil data gambar Base64
+    const fotoBase64 = canvas.toDataURL('image/jpeg', 0.9);
+    // -------------------------------------
 
-                if (resCek.exists) {
-                    showStatus(`Gagal: Wajah sudah milik ${resCek.nama}`, "error");
-                    setTimeout(() => { isProcessing = false; startScan(); }, 4000);
-                    return;
-                }
+    const descriptor = Array.from(detection.descriptor);
 
-                const simpan = await fetch('simpan_wajah.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nama, descriptor })
-                });
+    try {
+        const cek = await fetch('cek_wajah.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ descriptor })
+        });
+        const resCek = await cek.json();
 
-                if (simpan.ok) {
-                    showStatus("Registrasi Berhasil!", "success");
-                    setTimeout(() => window.location.href = 'verifikasi.php', 2000);
-                } else {
-                    throw new Error();
-                }
-
-            } catch (error) {
-                showStatus("Kesalahan koneksi server.", "error");
-                setTimeout(() => { isProcessing = false; startScan(); }, 3000);
-            }
+        if (resCek.exists) {
+            showStatus(`Gagal: Wajah ini milik ${resCek.nama}`, "error");
+            Swal.fire({
+                title: 'Wajah Sudah Terdaftar',
+                text: `Data biometrik ini sudah digunakan oleh ${resCek.nama}.`,
+                icon: 'warning',
+                background: '#1a1c1e', color: '#fff',
+                confirmButtonColor: '#3498db'
+            });
+            setTimeout(() => { isProcessing = false; startScan(); }, 4000);
+            return;
         }
+
+        // Kirim nama, descriptor, DAN foto ke simpan_wajah.php
+        const simpan = await fetch('simpan_wajah.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                nama: nama, 
+                descriptor: descriptor,
+                foto: fotoBase64 // <-- Data foto baru
+            })
+        });
+
+        if (simpan.ok) {
+            showStatus("Registrasi Berhasil!", "success");
+            Swal.fire({
+                title: 'Berhasil!',
+                text: 'Data wajah dan foto telah disimpan.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                background: '#1a1c1e', color: '#fff'
+            }).then(() => {
+                window.location.href = 'verifikasi.php';
+            });
+        } else {
+            throw new Error();
+        }
+
+    } catch (error) {
+        showStatus("Kesalahan server.", "error");
+        setTimeout(() => { isProcessing = false; startScan(); }, 3000);
+    }
+}
 
         window.onload = init;
     </script>

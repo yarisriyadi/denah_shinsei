@@ -5,16 +5,13 @@ if (!isset($_SESSION['terverifikasi'])) {
     exit(); 
 }
 
-// 1. Context data untuk navigasi balik
 $back_id = $_GET['id'] ?? ($_POST['back_id'] ?? '');
 $back_table = $_GET['table'] ?? ($_POST['back_table'] ?? '');
 
-// LOGIKA HAPUS ASSET
 if (isset($_GET['delete'])) {
     $file_name = basename($_GET['delete']);
     $file_path = "assets/items/" . $file_name;
     
-    // Pastikan file ada dan bukan direktori untuk keamanan
     if (!empty($file_name) && file_exists($file_path) && is_file($file_path)) {
         unlink($file_path);
         $status = "deleted";
@@ -25,7 +22,6 @@ if (isset($_GET['delete'])) {
     exit();
 }
 
-// LOGIKA UPLOAD
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
     $targetDir = "assets/items/";
     if (!file_exists($targetDir)) { 
@@ -94,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
             position: relative;
         }
 
-        /* Close Button (X) */
         .close-wrapper {
             position: absolute;
             top: 25px;
@@ -123,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         .header-content h2 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
         .header-content p { color: var(--text-muted); margin: 8px 0 35px; font-size: 15px; }
 
-        /* Upload Zone */
         .upload-container {
             background: rgba(0, 0, 0, 0.2);
             border: 2px dashed var(--border);
@@ -158,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         }
         .btn-upload:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-        /* Asset Grid */
         .grid-info {
             display: flex;
             justify-content: space-between;
@@ -170,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
 
         .asset-grid { 
     display: grid; 
-    /* Menggunakan minmax yang lebih kecil agar di HP bisa muat 2-3 kolom dengan rapi */
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
     gap: 12px; 
     max-height: 500px; 
@@ -182,8 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
 
         .asset-item { 
     background: #1c2638; 
-    padding: 12px; /* Padding dikurangi agar lebih compact */
-    border-radius: 16px; /* Radius sedikit diperhalus */
+    padding: 12px; 
+    border-radius: 16px; 
     text-align: center; 
     border: 1px solid var(--border); 
     transition: all 0.2s ease;
@@ -197,23 +189,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
 
         .asset-item img { 
     width: 100%; 
-    height: 70px; /* Tinggi gambar dikurangi agar tidak terlalu dominan */
+    height: 70px; 
     object-fit: contain; 
     margin-bottom: 8px;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
 }
 
         .asset-item .name {
-    font-size: 10px; /* Ukuran font diperkecil */
+    font-size: 10px; 
     color: var(--text-muted);
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Nama file panjang akan menjadi 'namafile...' */
+    text-overflow: ellipsis; 
     opacity: 0.8;
 }
 
-        /* Button Hapus: User Friendly & Touch Friendly */
         .btn-delete {
             position: absolute;
             top: 8px;
@@ -229,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
             justify-content: center;
             cursor: pointer;
             transition: 0.2s;
-            opacity: 0.9; /* Tetap terlihat sedikit agar user mobile tahu ada tombol */
+            opacity: 0.9; 
             z-index: 10;
         }
         .btn-delete i { font-size: 16px; pointer-events: none; }
@@ -306,7 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
                         <p>Belum ada aset tersedia</p>
                       </div>";
             } else {
-                // Sort by latest
                 array_multisort(array_map('filemtime', $files), SORT_DESC, $files);
                 
                 foreach($files as $file) {
@@ -327,7 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
     </div>
 
     <script>
-        // Konfirmasi Hapus - User Friendly
         function handleDelete(fileName) {
             Swal.fire({
                 title: 'Hapus Aset?',
@@ -349,7 +338,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
             })
         }
 
-        // Alert Notifikasi dari URL Status
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('status');
         const toastConfig = {

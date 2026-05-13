@@ -2,11 +2,8 @@
 <html lang="id">
 <head>
     <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
-
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>S-ID System | Verifikasi Wajah</title> 
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -52,7 +49,7 @@
             font-weight: 600; 
             letter-spacing: -0.5px; 
             font-size: 1.5rem;
-            cursor: default;
+            cursor: pointer;
             user-select: none;
         }
 
@@ -192,20 +189,22 @@
                 faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
                 faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-            ]);
+            ]).catch(err => {
+                throw new Error("Gagal memuat model AI (Cek Koneksi Internet)");
+            });
             
             showStatus("Sinkronisasi Database...", "process");
             const response = await fetch('ambil_data_wajah.php');
-            if (!response.ok) throw new Error("Gagal mengambil data dari database");
+            if (!response.ok) throw new Error("Gagal mengambil data dari server");
             
             const dataWajah = await response.json();
             if (!dataWajah || dataWajah.length === 0) {
-                showStatus("Database Kosong.", "error");
+                showStatus("Database Kosong. Silahkan Registrasi.", "error");
                 return;
             }
 
             const labeledDescriptors = dataWajah.map(user => {
-                const desc = typeof user.descriptor === 'string' ? JSON.parse(user.descriptor) : user.descriptor;
+                let desc = typeof user.descriptor === 'string' ? JSON.parse(user.descriptor) : user.descriptor;
                 return new faceapi.LabeledFaceDescriptors(user.nama, [new Float32Array(desc)]);
             });
 
@@ -217,7 +216,6 @@
             });
             video.srcObject = stream;
             
-            // Tunggu metadata video siap sebelum memulai loop
             video.onloadedmetadata = () => {
                 showStatus("Scanning Mode...", "process");
                 startScanning();
@@ -226,6 +224,14 @@
         } catch (err) {
             console.error("Detail Error:", err);
             showStatus("Gagal: " + err.message, "error");
+            
+            Swal.fire({
+                title: 'Kesalahan Sistem',
+                text: err.message,
+                icon: 'error',
+                background: '#1a1c1e', color: '#fff',
+                confirmButtonColor: '#e74c3c'
+            });
         }
     }
 
@@ -241,35 +247,46 @@
                 if (detection) {
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                     
-                    if (bestMatch.label !== 'unknown') {
-                        isFinished = true;
-                        clearInterval(scanLoop); 
-                        
-                        showStatus("ID TERVERIFIKASI", "success");
-                        
-                        Swal.fire({
-                            title: 'Akses Diterima!',
-                            text: `Nama: ${bestMatch.label}`,
-                            icon: 'success',
-                            background: '#1a1c1e', color: '#fff',
-                            timer: 2000, timerProgressBar: true,
-                            showConfirmButton: false,
-                            customClass: { popup: 'swal2-dark-custom' }
-                        }).then(() => {
-                            fetch('set_session.php', { 
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ nama: bestMatch.label }) 
-                            }).then(() => {
-                                window.location.href = 'index.php';
-                            });
-                        });
+if (bestMatch.label !== 'unknown') {
+    isFinished = true;
+    clearInterval(scanLoop); 
+    
+    showStatus("ID TERVERIFIKASI", "success");
+    
+    Swal.fire({
+        title: 'Akses Diterima!',
+        text: `Selamat Datang, ${bestMatch.label}`,
+        icon: 'success',
+        background: '#1a1c1e', 
+        color: '#fff',
+        timer: 1500, 
+        timerProgressBar: true,
+        showConfirmButton: false,
+        customClass: { popup: 'swal2-dark-custom' }
+    }).then(async () => {
+        await fetch('set_session.php', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama: bestMatch.label }) 
+        });
+        
+        showStatus("Menyiapkan koneksi aman...", "process");
+
+        setTimeout(() => {
+            window.location.href = 'load_masuk.php';
+        }, 3000); 
+    });
+
+                    } else {
+                        showStatus("Memindai... Wajah tidak dikenali", "process");
                     }
+                } else {
+                    showStatus("Posisikan wajah di dalam frame", "process");
                 }
             } catch (scanErr) {
                 console.error("Loop Error:", scanErr);
             }
-        }, 600);
+        }, 700); 
     }
 
     window.onload = init;
