@@ -4,9 +4,10 @@
     <link rel="icon" type="image/svg+xml" href="assets/logo2.svg" sizes="any">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S-ID System | Verifikasi Wajah</title> 
+    <title>S-SDI System | Verifikasi Akses</title> 
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
@@ -53,11 +54,30 @@
             user-select: none;
         }
 
-        .desc { 
-            color: var(--text-muted); 
-            font-size: 13px; 
-            margin-bottom: 25px; 
-            line-height: 1.4;
+        /* --- Style Baru: Pengalih Mode --- */
+        .mode-container {
+            display: flex;
+            background: #111315;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-btn.active {
+            background: var(--primary);
+            color: #fff;
         }
 
         .video-container { 
@@ -70,6 +90,35 @@
             background: #000;
             transition: all 0.4s ease;
             margin-bottom: 20px;
+        }
+
+        /* --- Style Baru: Tombol On/Off Kamera Overlap --- */
+        .cam-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+        .cam-toggle-btn:hover {
+            transform: scale(1.05);
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .cam-toggle-btn.cam-off {
+            background: var(--danger);
+            border-color: var(--danger);
         }
 
         .scan-line {
@@ -95,6 +144,54 @@
         .video-container.error { border-color: var(--danger); }
 
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+        /* --- Style Baru: Elemen Form Password --- */
+        .password-container {
+            display: none;
+            text-align: left;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #111315;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+        .btn-submit-pass {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        .btn-submit-pass:hover { background: #2980b9; }
 
         #status { 
             font-size: 14px; 
@@ -123,15 +220,37 @@
 <body>
 
     <div class="card">
-        <h3 class="title-header" id="secret-trigger">S-ID ACCESS</h3>
-        <p class="desc">Verifikasi identitas melalui pemindaian wajah</p>
+        <h3 class="title-header" id="secret-trigger">S-SDI ACCESS</h3>
         
-        <div class="video-container" id="v-box">
-            <div class="scan-line"></div>
-            <video id="video" autoplay muted playsinline></video>
+        <div class="mode-container">
+            <button class="mode-btn active" id="btn-face-mode" onclick="switchMode('face')"><i class="fa-solid fa-face-smile"></i> Face ID</button>
+            <button class="mode-btn" id="btn-pass-mode" onclick="switchMode('pass')"><i class="fa-solid fa-key"></i> Password</button>
         </div>
-        
-        <div id="status" class="msg-process">Menginisialisasi AI...</div>
+
+        <div id="face-section">
+            <div class="video-container" id="v-box">
+                <button class="cam-toggle-btn" id="cam-toggle" onclick="toggleCamera()" title="Matikan/Nyalakan Kamera">
+                    <i class="fa-solid fa-video"></i>
+                </button>
+                <div class="scan-line"></div>
+                <video id="video" autoplay muted playsinline></video>
+            </div>
+            <div id="status" class="msg-process">Menginisialisasi AI...</div>
+        </div>
+
+        <div id="password-section" class="password-container">
+            <form id="loginPasswordForm" onsubmit="handlePasswordLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Nama Lengkap / Username</label>
+                    <input type="text" id="login-username" placeholder="Masukkan nama" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Kata Sandi (Password)</label>
+                    <input type="password" id="login-password" placeholder="Masukkan password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-submit-pass">Masuk</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -139,10 +258,16 @@
     const status = document.getElementById('status');
     const vBox = document.getElementById('v-box');
     const secretTrigger = document.getElementById('secret-trigger');
+    const camToggle = document.getElementById('cam-toggle');
 
     let isFinished = false;
     let faceMatcher = null;
     let clickCount = 0;
+    let localStream = null;
+    let scanLoopInterval = null;
+    let isCameraOn = true;
+    let currentActiveMode = 'face';
+
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     secretTrigger.addEventListener('click', () => {
@@ -150,6 +275,67 @@
         if (clickCount === 5) window.location.href = 'registrasi_wajah.php';
         setTimeout(() => { clickCount = 0; }, 2000);
     });
+
+    function switchMode(targetMode) {
+        currentActiveMode = targetMode;
+        document.getElementById('btn-face-mode').classList.toggle('active', targetMode === 'face');
+        document.getElementById('btn-pass-mode').classList.toggle('active', targetMode === 'pass');
+
+        if (targetMode === 'face') {
+            document.getElementById('password-section').style.display = 'none';
+            document.getElementById('face-section').style.display = 'block';
+            if(!localStream && isCameraOn) startCameraStream();
+        } else {
+            document.getElementById('face-section').style.display = 'none';
+            document.getElementById('password-section').style.display = 'block';
+            stopCameraStream();
+        }
+    }
+
+    async function startCameraStream() {
+        try {
+            showStatus("Menghubungkan Kamera...", "process");
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            video.srcObject = localStream;
+            isCameraOn = true;
+            camToggle.className = "cam-toggle-btn";
+            camToggle.innerHTML = '<i class="fa-solid fa-video"></i>';
+            
+            video.onloadedmetadata = () => {
+                showStatus("Scanning Mode...", "process");
+                startScanning();
+            };
+        } catch(err) {
+            console.error(err);
+            isCameraOn = false;
+            showStatus("Kamera Gagal Dimuat. Gunakan Password.", "error");
+            setTimeout(() => { switchMode('pass'); }, 1500);
+        }
+    }
+
+    function stopCameraStream() {
+        if(scanLoopInterval) clearInterval(scanLoopInterval);
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        video.srcObject = null;
+    }
+
+    function toggleCamera() {
+        if (isCameraOn) {
+            stopCameraStream();
+            isCameraOn = false;
+            camToggle.className = "cam-toggle-btn cam-off";
+            camToggle.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+            showStatus("Kamera Dinonaktifkan.", "process");
+        } else {
+            isCameraOn = true;
+            startCameraStream();
+        }
+    }
 
     function showStatus(text, type) {
         status.innerText = text;
@@ -162,7 +348,7 @@
             vBox.classList.add('error');
         } else {
             status.className = 'msg-process';
-            if (text.includes("Memindai") || text.includes("Scanning")) vBox.classList.add('scanning');
+            if ((text.includes("Memindai") || text.includes("Scanning")) && isCameraOn) vBox.classList.add('scanning');
         }
     }
 
@@ -173,10 +359,10 @@
             if (isMobile) {
                 await Swal.fire({
                     title: 'Akses Sistem',
-                    text: 'Gunakan kamera untuk verifikasi wajah.',
+                    text: 'Gunakan kamera atau mode sandi untuk verifikasi.',
                     imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png',
                     imageWidth: 80, imageHeight: 80,
-                    confirmButtonText: 'Aktifkan',
+                    confirmButtonText: 'Mulai Sekarang',
                     confirmButtonColor: '#3498db',
                     background: '#1a1c1e', color: '#fff',
                     customClass: { popup: 'swal2-dark-custom' },
@@ -190,7 +376,7 @@
                 faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
             ]).catch(err => {
-                throw new Error("Gagal memuat model AI (Cek Koneksi Internet)");
+                throw new Error("Gagal memuat model AI (Cek Internet)");
             });
             
             showStatus("Sinkronisasi Database...", "process");
@@ -210,34 +396,39 @@
 
             faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
 
-            showStatus("Menghubungkan Kamera...", "process");
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
-            });
-            video.srcObject = stream;
-            
-            video.onloadedmetadata = () => {
-                showStatus("Scanning Mode...", "process");
-                startScanning();
-            };
+            await startCameraStream();
 
         } catch (err) {
             console.error("Detail Error:", err);
             showStatus("Gagal: " + err.message, "error");
-            
-            Swal.fire({
-                title: 'Kesalahan Sistem',
-                text: err.message,
-                icon: 'error',
-                background: '#1a1c1e', color: '#fff',
-                confirmButtonColor: '#e74c3c'
-            });
+            switchMode('pass');
         }
     }
 
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'logout') {
+            Swal.fire({
+                title: 'Terima Kasih!',
+                text: 'Anda telah berhasil keluar dari sistem.',
+                icon: 'success',
+                background: '#1a1c1e',
+                color: '#fff',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true,
+                willClose: () => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+        }
+    });
+
     function startScanning() {
-        const scanLoop = setInterval(async () => {
-            if (isFinished || !faceMatcher) return;
+        if(scanLoopInterval) clearInterval(scanLoopInterval);
+        
+        scanLoopInterval = setInterval(async () => {
+            if (isFinished || !faceMatcher || !isCameraOn || currentActiveMode !== 'face') return;
 
             try {
                 const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
@@ -247,36 +438,13 @@
                 if (detection) {
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                     
-if (bestMatch.label !== 'unknown') {
-    isFinished = true;
-    clearInterval(scanLoop); 
-    
-    showStatus("ID TERVERIFIKASI", "success");
-    
-    Swal.fire({
-        title: 'Akses Diterima!',
-        text: `Selamat Datang, ${bestMatch.label}`,
-        icon: 'success',
-        background: '#1a1c1e', 
-        color: '#fff',
-        timer: 1500, 
-        timerProgressBar: true,
-        showConfirmButton: false,
-        customClass: { popup: 'swal2-dark-custom' }
-    }).then(async () => {
-        await fetch('set_session.php', { 
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nama: bestMatch.label }) 
-        });
-        
-        showStatus("Menyiapkan koneksi aman...", "process");
-
-        setTimeout(() => {
-            window.location.href = 'load_masuk.php';
-        }, 3000); 
-    });
-
+                    if (bestMatch.label !== 'unknown') {
+                        isFinished = true;
+                        clearInterval(scanLoopInterval); 
+                        stopCameraStream();
+                        
+                        showStatus("ID TERVERIFIKASI", "success");
+                        handleLoginSuccess(bestMatch.label);
                     } else {
                         showStatus("Memindai... Wajah tidak dikenali", "process");
                     }
@@ -289,7 +457,80 @@ if (bestMatch.label !== 'unknown') {
         }, 700); 
     }
 
+    function handleLoginSuccess(namaUser) {
+        Swal.fire({
+            title: 'Akses Diterima!',
+            text: `Selamat Datang, ${namaUser}`,
+            icon: 'success',
+            background: '#1a1c1e', 
+            color: '#fff',
+            timer: 1500, 
+            timerProgressBar: true,
+            showConfirmButton: false,
+            customClass: { popup: 'swal2-dark-custom' }
+        }).then(async () => {
+            showStatus("Menyiapkan koneksi aman...", "process");
+            
+            await fetch('set_session.php', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama: namaUser }) 
+            });
+            
+            setTimeout(() => {
+                window.location.href = 'load_masuk.php';
+            }, 1500); 
+        });
+    }
+
+    async function handlePasswordLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        Swal.fire({
+            title: 'Memverifikasi...',
+            allowOutsideClick: false,
+            background: '#1a1c1e', color: '#fff',
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch('login_password.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await response.json();
+            Swal.close();
+
+            if (result.status === 'success') {
+                isFinished = true;
+                stopCameraStream();
+                handleLoginSuccess(result.nama);
+            } else {
+                Swal.fire({
+                    title: 'Verifikasi Gagal',
+                    text: result.message || 'Username atau password salah.',
+                    icon: 'error',
+                    background: '#1a1c1e', color: '#fff',
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.close();
+            Swal.fire({
+                title: 'Error Server',
+                text: 'Gagal terhubung dengan layanan autentikasi.',
+                icon: 'error',
+                background: '#1a1c1e', color: '#fff'
+            });
+        }
+    }
+
     window.onload = init;
-</script>
+    </script>
 </body>
 </html>

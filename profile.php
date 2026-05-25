@@ -1,5 +1,4 @@
 <?php
-// 1. Aktifkan Error Reporting untuk Debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -96,6 +95,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - SHINSEI MAP</title>
+    <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -172,7 +172,6 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
             object-fit: cover;
         }
 
-        /* Dropdown CSS */
         .dropdown-photo {
             position: absolute;
             bottom: 5px;
@@ -236,6 +235,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
 
         .show { display: block; }
 
+        /* General Info CSS */
         .greeting-text {
             font-size: 14px;
             color: var(--text-gray);
@@ -309,7 +309,6 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
                 <?php endif; ?>
             </div>
             
-            <!-- Tombol Tiga Titik & Dropdown -->
             <div class="dropdown-photo">
                 <div class="btn-ellipsis" onclick="toggleDropdown(event)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121416" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -373,6 +372,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         document.getElementById("photoMenu").classList.toggle("show");
     }
 
+    // Close dropdown when clicking outside
     window.onclick = function(event) {
         if (!event.target.matches('.btn-ellipsis') && !event.target.closest('.btn-ellipsis')) {
             var dropdowns = document.getElementsByClassName("dropdown-menu");
@@ -461,6 +461,38 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         });
         window.history.replaceState({}, document.title, window.location.pathname);
     }
+    function periksaSesiEditor() {
+    fetch('cek_sesi.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'conflict' || data.status === 'invalid') {
+                
+                clearInterval(intervalCekSesiEditor);
+
+                let pesanBatal = data.status === 'conflict' 
+                    ? 'Akun Anda baru saja digunakan untuk login di perangkat atau browser lain.' 
+                    : 'Sesi Anda telah berakhir. Silahkan login kembali.';
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sesi Kerja Berakhir!',
+                    text: pesanBatal,
+                    background: '#1a1c1e',
+                    color: '#ffffff',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: 'Kembali',
+                    confirmButtonColor: '#ff4757'
+                }).then(() => {
+                    window.location.href = 'verifikasi.php'; 
+                });
+            }
+        })
+        .catch(error => console.error('Gagal memvalidasi status sesi:', error));
+}
+
+const intervalCekSesiEditor = setInterval(periksaSesiEditor, 5000);
+
 </script>
 
 </body>

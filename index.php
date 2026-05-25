@@ -9,6 +9,19 @@ include 'koneksi.php';
 
 $id_terdeteksi = $_SESSION['user_id'] ?? $_POST['id'] ?? null;
 
+date_default_timezone_set('Asia/Jakarta');
+$jam = date('G');
+
+if ($jam >= 5 && $jam < 11) {
+    $sapaan = "Selamat Pagi";
+} elseif ($jam >= 11 && $jam < 15) {
+    $sapaan = "Selamat Siang";
+} elseif ($jam >= 15 && $jam < 18) {
+    $sapaan = "Selamat Sore";
+} else {
+    $sapaan = "Selamat Malam";
+}
+
 $namaUser = "Guest"; 
 
 if ($id_terdeteksi) {
@@ -38,7 +51,7 @@ if ($id_terdeteksi) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <style>
+      <style>
         :root { 
             --sidebar-bg: #121416; 
             --blue: #3498db; 
@@ -308,52 +321,169 @@ if ($id_terdeteksi) {
             font-family: inherit;
         }
         #mobile-menu-btn {
-    display: none; 
-    position: fixed; 
-    bottom: 20px; 
-    left: 20px; 
-    z-index: 2500;
-    background: var(--blue); 
-    border: none;
-    width: 50px; 
-    height: 50px; 
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    cursor: pointer;
-    padding: 0; 
-    outline: none;
-    display: none; 
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s ease; 
-}
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            left: 20px; 
+            z-index: 2500;
+            background: var(--blue); 
+            border: none;
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            padding: 0; 
+            outline: none;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease; 
+        }
 
-.hamburger-icon {
-    display: inline-block;
-    font-size: 24px;
-    line-height: 1;
-    color: white; 
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-}
+        .hamburger-icon {
+            display: inline-block;
+            font-size: 24px;
+            line-height: 1;
+            color: white; 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
 
-#mobile-menu-btn.rotated {
-    background: #1c1f22; 
-    border: 1px solid rgba(255, 71, 87, 0.3);
-}
+        #mobile-menu-btn.rotated {
+            background: #3498db; 
+            border: none;
+        }
 
-#mobile-menu-btn.rotated .hamburger-icon {
-    transform: rotate(90deg); 
-    color: var(--red); 
-}
+        #mobile-menu-btn.rotated .hamburger-icon {
+            transform: rotate(90deg); 
+            color: white; 
+        }
 
-.brand-logo {
-    height: 75px; 
-    width: auto;  
-    object-fit: contain;
-    display: block;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    content: url('assets/icon.webp'); 
-}
+        .brand-logo {
+            height: 75px; 
+            width: auto;  
+            object-fit: contain;
+            display: block;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            content: url('assets/icon.webp'); 
+        }
+
+        /* --- Perbaikan Welcome Screen & Card (Anti-Geser) --- */
+        #welcome-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .welcome-card {
+            text-align: center;
+            padding: 50px 30px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            max-width: 420px;
+            width: 100%;
+            box-sizing: border-box;
+            /* Dihapus: animasi welcomeEntrance berlebih untuk mencegah shifting */
+        }
+
+        .welcome-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: inline-block;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+        }
+
+        .welcome-card h2 {
+            color: white;
+            font-size: clamp(24px, 4vw, 32px);
+            margin: 0 0 12px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-card p {
+            color: #94a3b8;
+            font-size: clamp(14px, 2vw, 16px);
+            margin: 0 0 35px 0;
+            line-height: 1.8;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* --- Perbaikan Map Loader Spinner (Hanya Spinner dan Angka) --- */
+        .map-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1500; 
+            display: none;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
+            /* Latar belakang kotak hitam transparan dan padding dibersihkan */
+            background: none; 
+            padding: 0;
+            border-radius: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(52, 152, 219, 0.1);
+            border-top: 4px solid var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        #load-percentage {
+            color: var(--blue);
+            font-weight: 800;
+            margin-top: 15px;
+            font-size: 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Shadow agar teks tetap terbaca jelas di atas denah gambar apa pun */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #welcome-screen.fade-out {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+
+        /* --- Media Queries --- */
         @media (max-width: 768px) {
             #sidebar {
                 position: fixed;
@@ -363,9 +493,7 @@ if ($id_terdeteksi) {
                 box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             }
             #sidebar.active { transform: translateX(0); }
-#mobile-menu-btn { 
-        display: flex; /* Tampilkan tombol sebagai flexbox di mobile */
-    }
+            #mobile-menu-btn { display: flex; }
             .map-label { 
                 left: 15px; top: 15px; font-size: 11px; padding: 6px 12px;
                 max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -377,150 +505,61 @@ if ($id_terdeteksi) {
             .brand { font-size: 16px; }
             .sidebar-header { padding: 20px 12px; }
             .user-name-label { max-width: 60px; }
-            .brand-logo {
-                height: 75px; 
-            }
+            .brand-logo { height: 75px; }
+            .welcome-card { padding: 40px 20px; }
+            .welcome-icon { font-size: 50px; }
+            #load-percentage { font-size: 14px; }
+            .spinner { width: 35px; height: 35px; }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-card { padding: 40px 25px; border-radius: 30px; }
         }
 
         @media print {
             #sidebar, .btn-print, #mobile-menu-btn { display: none !important; }
         }
 
-        body.swal2-shown {
-            height: 100vh !important;
-            overflow: hidden !important;
-        }
-
-        .swal2-container {
-            z-index: 9999 !important;
-        }
-        body.swal2-shown {
-            overflow: hidden !important;
-            padding-right: 0 !important;
-        }
+        body.swal2-shown { height: 100vh !important; overflow: hidden !important; }
+        .swal2-container { z-index: 9999 !important; }
+        body.swal2-shown { overflow: hidden !important; padding-right: 0 !important; }
+        
         .btn-edit-canvas {
-            font-size: 14px;
-            opacity: 0.6;
-            transition: 0.3s;
-            padding: 2px 5px;
-            border-radius: 4px;
+            font-size: 14px; opacity: 0.6; transition: 0.3s; padding: 2px 5px; border-radius: 4px;
         }
-        .sub-child:hover .btn-edit-canvas, 
-        .sub-item:hover .btn-edit-canvas {
-            opacity: 1;
-        }
-        .btn-edit-canvas:hover {
-            background: rgba(46, 204, 113, 0.2);
-            transform: scale(1.2);
-        }
-        .user-dropdown {
-            position: relative;
-            margin-top: 0;
-        }
+        .sub-child:hover .btn-edit-canvas, .sub-item:hover .btn-edit-canvas { opacity: 1; }
+        .btn-edit-canvas:hover { background: rgba(46, 204, 113, 0.2); transform: scale(1.2); }
+        
+        .user-dropdown { position: relative; margin-top: 0; }
         .user-trigger {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            padding: 5px 8px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.03);
-            transition: 0.3s;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 8px;
+            border-radius: 8px; background: rgba(255,255,255,0.03); transition: 0.3s;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .user-trigger:hover {
-            background: rgba(52, 152, 219, 0.1);
-            border-color: var(--blue);
-        }
-        .user-avatar-wrapper {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
+        .user-trigger:hover { background: rgba(52, 152, 219, 0.1); border-color: var(--blue); }
+        .user-avatar-wrapper { width: 24px; height: 24px; flex-shrink: 0; }
         .user-name-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: white;
-            max-width: 80px; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .chevron-icon {
-            font-size: 12px;
-            color: var(--text-dim);
+            font-size: 13px; font-weight: 600; color: white; max-width: 80px; 
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .user-menu-content {
-            display: none;
-            position: absolute;
-            top: 110%;
-            right: 0; 
-            width: 160px;
-            background: #1c1f22;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 3000;
+            display: none; position: absolute; top: 110%; right: 0; width: 160px;
+            background: #1c1f22; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 3000;
         }
-        .user-menu-content.show {
-            display: block;
-            animation: slideIn 0.2s ease-out;
-        }
-        .menu-greeting {
-            padding: 12px 15px;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-        .menu-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.05);
-          
-        }
-        .user-menu-content a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 15px;
-            color: white;
-            text-decoration: none;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-        .user-menu-content a:hover {
-            background: var(--blue);
-        }
-        .logout-link:hover {
-            background: var(--red) !important;
-        }
+        .user-menu-content.show { display: block; animation: slideIn 0.2s ease-out; }
+        .menu-greeting { padding: 12px 15px; font-size: 12px; color: var(--text-dim); }
+        .menu-divider { height: 1px; background: rgba(255,255,255,0.05); }
+        .user-menu-content a { display: flex; align-items: center; gap: 10px; padding: 10px 15px; color: white; text-decoration: none; font-size: 13px; transition: 0.2s; }
+        .user-menu-content a:hover { background: var(--blue); }
+        .logout-link:hover { background: var(--red) !important; }
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        #welcome-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #1a1c1e; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 999; 
-    color: var(--text-dim);
-    text-align: center;
-    padding: 20px;
-}
-#welcome-screen svg {
-    margin-bottom: 15px;
-    opacity: 0.3;
-}
-.btn-print.hidden {
-    display: none;
-}
-</style>
+        .btn-print.hidden { display: none; }
+      </style>
 </head>
 <body>
 
@@ -550,7 +589,7 @@ if ($id_terdeteksi) {
 
             <div id="userMenu" class="user-menu-content">
                 <div class="menu-greeting">
-                    <span id="greeting-text">Halo</span>
+                    <span id="greeting-text">Halo,</span>
                     <strong><?= htmlspecialchars($namaUser) ?></strong>
                 </div>
                 <div class="menu-divider"></div>
@@ -622,15 +661,29 @@ if ($id_terdeteksi) {
 </div>
 
 <div id="content">
-    <div class="map-label" id="current-label">Pilih Denah</div>
+    <div class="map-label" id="current-label" style="display: none;">Pilih Denah</div>
     
-    <button class="btn-print" id="btnExport" onclick="printUltraHighResDenah()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20">
-            <path d="M640-640v-120H320v120h-80v-200h480v200h-80Zm-480 80h640-640Zm560 100q17 0 28.5-11.5T760-500q0-17-11.5-28.5T720-540q-17 0-28.5 11.5T680-500q0 17 11.5 28.5T720-460Zm-80 260v-160H320v160h320Zm80 80H240v-160H80v-240q0-51 35-85.5t85-34.5h560q51 0 85.5 34.5T880-520v240H720v160Zm80-240v-160q0-17-11.5-28.5T760-560H200q-17 0-28.5 11.5T160-520v160h80v-80h480v80h80Z"/>
-        </svg>
+    <div id="welcome-screen">
+        <div class="welcome-card">
+            <div class="welcome-icon">🗺️</div>
+            
+            <h2 id="welcome-greeting"><?= $sapaan ?>, <?= htmlspecialchars($namaUser) ?>!</h2>
+            <p>Silakan Pilih Maps</p>
+            
+            <div class="version-badge">
+                Version 1.0
+            </div>
+        </div>
+    </div>
+
+    <div id="map-loader" class="map-loader" style="display: none;">
+        <div class="spinner"></div>
+        <div id="load-percentage">0%</div>
+    </div>
+
+    <button class="btn-print" id="btnExport" onclick="printUltraHighResDenah()" style="display: none;">
         <span>Export PDF</span>
     </button>
-
     <div id="map"></div>
 </div>
 
@@ -638,9 +691,10 @@ if ($id_terdeteksi) {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
 <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
-<script>
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
-    const Toast = Swal.mixin({
+<script>
+const Toast = Swal.mixin({
     focusConfirm: false,
 });
 
@@ -655,7 +709,7 @@ var map = L.map('map', {
 
 var currentOverlay = null;
     
-    function toggleUserMenu() {
+function toggleUserMenu() {
     const menu = document.getElementById('userMenu');
     if (menu) {
         menu.classList.toggle('show');
@@ -663,7 +717,10 @@ var currentOverlay = null;
 }
 
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('active');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('active');
+    }
 }
 
 function handleMapLoad(file, w, h, judul, element) {
@@ -684,52 +741,153 @@ function toggleSub(id) {
         if (el.id !== 'group-' + id) el.classList.remove('open'); 
     });
 
-    if (container.style.display === "block") {
-        container.style.display = "none";
-        group.classList.remove('open');
-    } else {
-        container.style.display = "block";
-        group.classList.add('open');
+    if (container) {
+        if (container.style.display === "block") {
+            container.style.display = "none";
+            if (group) group.classList.remove('open');
+        } else {
+            container.style.display = "block";
+            if (group) group.classList.add('open');
+        }
     }
 }
 
 function loadMap(file, w, h, judul, element) {
     if (window.event && (window.event.target.classList.contains('btn-delete') || window.event.target.classList.contains('btn-edit'))) return;
-    if (element.classList.contains('active')) return;
+    
+    if (element && element.classList && typeof element.classList.contains === 'function') {
+        if (element.classList.contains('active')) return;
+    }
 
-    document.getElementById('current-label').innerText = judul;
-    document.querySelectorAll('.sub-item, .sub-child').forEach(i => i.classList.remove('active'));
-    element.classList.add('active');
+    sessionStorage.setItem('activeMapFile', file);
+    sessionStorage.setItem('activeMapW', w);
+    sessionStorage.setItem('activeMapH', h);
+    sessionStorage.setItem('activeMapJudul', judul);
+    
+    const allItems = Array.from(document.querySelectorAll('.sub-item, .sub-child'));
+    if (element) {
+        const elementIndex = allItems.indexOf(element);
+        sessionStorage.setItem('activeMapIndex', elementIndex);
+    }
+
+    const welcomeScreen = document.getElementById('welcome-screen');
+    if (welcomeScreen) {
+        welcomeScreen.style.display = 'none';
+    }
+
+    const currentLabel = document.getElementById('current-label');
+    if (currentLabel) {
+        currentLabel.innerText = judul;
+        currentLabel.style.display = 'block';
+    }
+    
+    allItems.forEach(i => i.classList.remove('active'));
+    if (element && element.classList) {
+        element.classList.add('active');
+    }
 
     if (currentOverlay) map.removeLayer(currentOverlay);
+
+    // Validasi data kolom gambar dari database jika kosong / NULL
+    if (!file || file === 'NULL' || file.trim() === '') {
+        const btnExport = document.getElementById('btnExport');
+        if (btnExport) btnExport.style.display = 'none';
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Gambar Belum Tersedia',
+            text: `Layout untuk "${judul}" belum diunggah atau file kosong.`,
+            background: '#1a1c1e',
+            color: '#ffffff'
+        });
+        return;
+    }
+
+    const btnExport = document.getElementById('btnExport');
+    if (btnExport) btnExport.style.display = 'block';
 
     var sw = map.unproject([0, h], map.getMaxZoom());
     var ne = map.unproject([w, 0], map.getMaxZoom());
     var bounds = new L.LatLngBounds(sw, ne);
 
-    // LOGIKA RENDER .WEBP: Menghapus ekstensi apapun dan menggantinya ke .webp
     var fileNameWebp = file.substring(0, file.lastIndexOf('.')) + '.webp';
     var imageUrl = 'uploads/' + fileNameWebp;
 
-    currentOverlay = L.imageOverlay(imageUrl, bounds, {
-        opacity: 0, 
-        alt: judul,
-        interactive: true
-    }).addTo(map);
+    const loader = document.getElementById('map-loader');
+    const percentText = document.getElementById('load-percentage');
+    if (loader) loader.style.display = 'flex';
+    if (percentText) percentText.innerText = '0%';
 
-    const imgNode = currentOverlay.getElement();
-    if (imgNode) {
-        imgNode.style.transition = "opacity 0.5s";
-        imgNode.onload = function() {
-            this.style.opacity = "1";
-        };
-    }
-    map.fitBounds(bounds);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', imageUrl, true);
+    xhr.responseType = 'blob';
+
+    xhr.onprogress = function(e) {
+        if (e.lengthComputable) {
+            var percentage = Math.round((e.loaded / e.total) * 100);
+            if (percentText) percentText.innerText = percentage + '%';
+        }
+    };
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            if (percentText) percentText.innerText = '100%';
+            var blobUrl = URL.createObjectURL(xhr.response);
+
+            currentOverlay = L.imageOverlay(blobUrl, bounds, {
+                opacity: 1, 
+                alt: judul,
+                interactive: true
+            }).addTo(map);
+
+            if (loader) loader.style.display = 'none';
+
+            const imgNode = currentOverlay.getElement();
+            if (imgNode) {
+                imgNode.onerror = function() {
+                    if (loader) loader.style.display = 'none';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Gambar Hilang',
+                        text: `File "${fileNameWebp}" tidak ditemukan di direktori server.`,
+                        background: '#1a1c1e',
+                        color: '#ffffff'
+                    });
+                };
+            }
+            map.fitBounds(bounds);
+        } else {
+            if (loader) loader.style.display = 'none';
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Memuat File',
+                text: `Sistem mendeteksi HTTP Status ${xhr.status} saat mencoba mengunduh denah.`,
+                background: '#1a1c1e',
+                color: '#ffffff'
+            });
+        }
+    };
+
+    xhr.onerror = function() {
+        if (loader) loader.style.display = 'none';
+        Swal.fire({
+            icon: 'error',
+            title: 'Kesalahan Jaringan',
+            text: 'Gagal menyambung ke server untuk mengunduh asset denah.',
+            background: '#1a1c1e',
+            color: '#ffffff'
+        });
+    };
+
+    xhr.send();
 }
 
-document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-    this.classList.toggle('rotated');
-});
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', function() {
+        this.classList.toggle('rotated');
+    });
+}
 
 function renameItem(event, id, table, oldName) {
     event.stopPropagation();
@@ -739,7 +897,9 @@ function renameItem(event, id, table, oldName) {
         inputValue: oldName,
         inputLabel: 'Masukkan nama baru untuk denah ini',
         showCancelButton: true,
+        reverseButtons: true,
         confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
         background: '#1a1c1e',
         color: '#ffffff',
         preConfirm: (newName) => {
@@ -760,21 +920,23 @@ function renameItem(event, id, table, oldName) {
             .catch(error => Swal.showValidationMessage(`Gagal: ${error}`));
         }
     }).then((result) => {
-        if (result.isConfirmed && result.value.success) {
+        if (result.isConfirmed && result.value && result.value.success) {
             location.reload();
         }
     });
 }
 
 function deleteItem(event, id, table, name) {
-    event.stopPropagation();
+    event.stopPropagation(); 
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: `Denah "${name}" akan dihapus secara permanen!`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ff4757',
+        cancelButtonColor: '#3498db',
         confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
         background: '#1a1c1e',
         color: '#ffffff',
         reverseButtons: true
@@ -785,7 +947,9 @@ function deleteItem(event, id, table, name) {
                 allowOutsideClick: false,
                 background: '#1a1c1e',
                 color: '#ffffff',
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
 
             fetch(`hapus.php?id=${id}&table=${table}`)
@@ -794,17 +958,26 @@ function deleteItem(event, id, table, name) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Terhapus!',
+                            text: 'Data telah berhasil dihapus.',
                             timer: 1500,
                             showConfirmButton: false,
                             background: '#1a1c1e',
                             color: '#ffffff'
-                        }).then(() => location.reload());
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
                         throw new Error('Gagal menghapus data.');
                     }
                 })
                 .catch(error => {
-                    Swal.fire({ icon: 'error', title: 'Oops...', text: error.message });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error.message,
+                        background: '#1a1c1e',
+                        color: '#ffffff'
+                    });
                 });
         }
     });
@@ -867,87 +1040,79 @@ async function printUltraHighResDenah() {
 
 function setGreeting() {
     const hour = new Date().getHours();
-    const greetingElement = document.getElementById('greeting-text');
-    let greeting = hour < 11 ? "☀️ Selamat Pagi," : hour < 15 ? "🌤️ Selamat Siang," : hour < 18 ? "⛅ Selamat Sore," : "🌙 Selamat Malam,";
+    const greetingElement = document.getElementById('welcome-greeting'); 
+    let greeting = hour < 11 ? "☀️ Selamat Pagi" : hour < 15 ? "🌤️ Selamat Siang" : hour < 18 ? "⛅ Selamat Sore" : "🌙 Selamat Malam";
     
-    if(greetingElement) greetingElement.innerHTML = greeting;
+    if (greetingElement) {
+        greetingElement.innerHTML = `${greeting}, <?= htmlspecialchars($namaUser) ?>!`;
+    }
 }
 
 window.onload = function() {
     setGreeting();
-    const firstItem = document.querySelector('.sub-item');
-    if(firstItem) firstItem.click();
-};
+    
+    const savedFile = sessionStorage.getItem('activeMapFile');
+    const savedW = sessionStorage.getItem('activeMapW');
+    const savedH = sessionStorage.getItem('activeMapH');
+    const savedJudul = sessionStorage.getItem('activeMapJudul');
+    const savedIndex = sessionStorage.getItem('activeMapIndex');
 
+    const hasSavedMap = savedFile && savedW && savedH && savedJudul && savedIndex !== null && savedIndex !== 'null';
+
+    if (hasSavedMap) {
+        const allItems = document.querySelectorAll('.sub-item, .sub-child');
+        const targetIndex = parseInt(savedIndex, 10);
+        
+        const targetElement = (allItems && allItems[targetIndex]) ? allItems[targetIndex] : null;
+        
+        loadMap(savedFile, parseInt(savedW, 10), parseInt(savedH, 10), savedJudul, targetElement);
+        
+    } else {
+        document.getElementById('welcome-screen')?.style.setProperty('display');
+    }
+};
+    
 window.addEventListener('click', function(e) {
     const userMenu = document.getElementById('userMenu');
-    if (userMenu && !document.querySelector('.user-dropdown').contains(e.target)) {
+    const dropdown = document.querySelector('.user-dropdown');
+    if (userMenu && dropdown && !dropdown.contains(e.target)) {
         userMenu.classList.remove('show');
     }
 });
+    
+    function periksaSesiPerangkat() {
+    fetch('cek_sesi.php')
+        .then(response => response.json())
+        .then(data => {
+            
+            if (data.status === 'conflict' || data.status === 'invalid') {
+                
+                clearInterval(intervalCekSesi);
 
-document.addEventListener('DOMContentLoaded', setGreeting);
-function deleteItem(event, id, table, name) {
-    event.stopPropagation(); 
+                let pesan = data.status === 'conflict' 
+                    ? 'Akun Anda baru saja digunakan untuk login di perangkat atau browser lain.' 
+                    : 'Sesi Anda telah berakhir. Silahkan login kembali.';
 
-    Swal.fire({
-        title: 'Apakah Anda yakin?',
-        text: `Denah "${name}" akan dihapus secara permanen!`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff4757',
-        cancelButtonColor: '#3498db',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        background: '#1a1c1e',
-        color: '#ffffff',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Menghapus...',
-                allowOutsideClick: false,
-                background: '#1a1c1e',
-                color: '#ffffff',
-                didClose: () => {
-            document.getElementById('mobile-menu-btn').focus();
-        }
-    }).then((result) => {
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
 
-            fetch(`hapus.php?id=${id}&table=${table}`)
-                .then(response => {
-                    if (response.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Terhapus!',
-                            text: 'Data telah berhasil dihapus.',
-                            timer: 1500,
-                            showConfirmButton: false,
-                            background: '#1a1c1e',
-                            color: '#ffffff'
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        throw new Error('Gagal menghapus data.');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: error.message,
-                        background: '#1a1c1e',
-                        color: '#ffffff'
-                    });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sesi Berakhir!',
+                    text: pesan,
+                    background: '#1a1c1e',
+                    color: '#ffffff',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ff4757'
+                }).then(() => {
+                    window.location.href = 'verifikasi.php'; 
                 });
-        }
-    });
+            }
+        })
+        .catch(error => console.error('Gagal memvalidasi sesi:', error));
 }
+
+const intervalCekSesi = setInterval(periksaSesiPerangkat, 5000);
 </script>
 </body>
 </html>

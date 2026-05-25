@@ -241,7 +241,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
     }
     
     .asset-grid { 
-        /* Di HP dipaksa 3 kolom jika layar cukup, atau minimal 2 kolom bersih */
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
         gap: 10px;
     }
@@ -289,31 +288,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         </div>
 
         <div class="asset-grid">
-            <?php
-            $files = glob("assets/items/*.{jpg,png,jpeg,gif,webp}", GLOB_BRACE);
-            if(empty($files)) {
-                echo "<div style='grid-column: 1/-1; text-align: center; padding: 60px 0; color: var(--text-muted); opacity: 0.5;'>
-                        <i class='fa-regular fa-folder-open' style='font-size: 40px; margin-bottom: 15px;'></i>
-                        <p>Belum ada aset tersedia</p>
-                      </div>";
-            } else {
-                array_multisort(array_map('filemtime', $files), SORT_DESC, $files);
-                
-                foreach($files as $file) {
-                    $name = basename($file);
-                    ?>
-                    <div class="asset-item">
-    <button type="button" class="btn-delete" onclick="handleDelete('<?= $name ?>')" aria-label="Hapus Aset">
-        <i class="fa-solid fa-trash-can"></i>
-    </button>
-    <img src="<?= $file ?>" alt="<?= $name ?>" loading="lazy">
-    <div class="name" title="<?= $name ?>"><?= $name ?></div>
-</div>
-                    <?php
-                }
-            }
+    <?php
+    $files = glob("assets/items/*.{jpg,png,jpeg,gif,webp}", GLOB_BRACE);
+    
+    if(empty($files)) {
+        echo "<div style='grid-column: 1/-1; text-align: center; padding: 60px 0; color: var(--text-muted); opacity: 0.5;'>
+                <i class='fa-regular fa-folder-open' style='font-size: 40px; margin-bottom: 15px;'></i>
+                <p>Belum ada aset tersedia</p>
+              </div>";
+    } else {
+        $timestamps = array_map('filemtime', $files);
+        array_multisort($timestamps, SORT_DESC, $files);
+        
+        foreach($files as $file) {
+            $name = basename($file);
             ?>
-        </div>
+            <div class="asset-item">
+                <button type="button" class="btn-delete" onclick="handleDelete('<?= $name ?>')" aria-label="Hapus Aset">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <img src="<?= $file ?>" alt="<?= $name ?>" loading="lazy">
+                <div class="name" title="<?= $name ?>"><?= $name ?></div>
+            </div>
+            <?php
+        }
+    }
+    ?>
+</div>
+
     </div>
 
     <script>
@@ -355,6 +357,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         } else if(status === 'error') {
             Swal.fire({ ...toastConfig, title: 'Gagal', text: 'Terjadi gangguan saat mengunggah.', icon: 'error' });
         }
+        function periksaSesiEditor() {
+    fetch('cek_sesi.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'conflict' || data.status === 'invalid') {
+                
+                clearInterval(intervalCekSesiEditor);
+
+                let pesanBatal = data.status === 'conflict' 
+                    ? 'Akun Anda baru saja digunakan untuk login di perangkat atau browser lain.' 
+                    : 'Sesi Anda telah berakhir. Silahkan login kembali.';
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sesi Kerja Berakhir!',
+                    text: pesanBatal,
+                    background: '#1a1c1e',
+                    color: '#ffffff',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: 'Kembali',
+                    confirmButtonColor: '#ff4757'
+                }).then(() => {
+                    window.location.href = 'verifikasi.php'; // Sesuaikan nama file login Anda
+                });
+            }
+        })
+        .catch(error => console.error('Gagal memvalidasi status sesi:', error));
+}
+
+// Jalankan pengecekan otomatis ke file cek_sesi.php setiap 5 detik (5000ms)
+const intervalCekSesiEditor = setInterval(periksaSesiEditor, 5000);
     </script>
 
 </body>

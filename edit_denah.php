@@ -813,7 +813,7 @@ function selectItem(el) {
     el.classList.add('selected');
     selectedItemSrc = el.src;
     ghost.src = el.src;
-    stampRotation = 0; // Reset rotasi untuk asset baru
+    stampRotation = 0; 
     setMode('stamp');
     const sidebar = document.getElementById('sidebar');
     if (!sidebar.classList.contains('collapsed')) toggleSidebar(); 
@@ -871,7 +871,6 @@ function saveImage() {
                 didOpen: () => Swal.showLoading() 
             });
 
-            // PERBAIKAN: Gunakan toBlob agar lebih ringan dan efisien
             canvas.toBlob((blob) => {
                 const formData = new FormData();
                 formData.append('image', blob, 'denah.webp');
@@ -880,7 +879,7 @@ function saveImage() {
 
                 fetch('save_denah_edit.php', {
                     method: 'POST',
-                    body: formData // Mengirim FormData secara langsung
+                    body: formData 
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -902,7 +901,7 @@ function saveImage() {
                         confirmButtonText: 'Coba Lagi'
                     });
                 });
-            }, 'image/jpeg', 0.85); // Kualitas 0.85 sudah cukup bagus
+            }, 'image/jpeg', 0.85); 
         }
     });
 }
@@ -959,6 +958,38 @@ window.addEventListener('online', () => {
         timer: 3000
     });
 });
+
+function periksaSesiEditor() {
+    fetch('cek_sesi.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'conflict' || data.status === 'invalid') {
+                
+                clearInterval(intervalCekSesiEditor);
+
+                let pesanBatal = data.status === 'conflict' 
+                    ? 'Akun Anda baru saja digunakan untuk login di perangkat atau browser lain.' 
+                    : 'Sesi Anda telah berakhir. Silahkan login kembali.';
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sesi Kerja Berakhir!',
+                    text: pesanBatal,
+                    background: '#1a1c1e',
+                    color: '#ffffff',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: 'Kembali',
+                    confirmButtonColor: '#ff4757'
+                }).then(() => {
+                    window.location.href = 'verifikasi.php';
+                });
+            }
+        })
+        .catch(error => console.error('Gagal memvalidasi status sesi:', error));
+}
+
+const intervalCekSesiEditor = setInterval(periksaSesiEditor, 5000);
 </script>
 </body>
 </html>

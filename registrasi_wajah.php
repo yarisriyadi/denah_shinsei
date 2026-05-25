@@ -134,7 +134,7 @@
             padding: 14px 18px; 
             border-radius: 14px; 
             border: 2px solid var(--border); 
-            margin-bottom: 15px; 
+            margin-bottom: 12px; 
             width: 100%; 
             background: #111; 
             color: white; 
@@ -197,6 +197,7 @@
         <p class="desc">Ambil data biometrik untuk keamanan akses Anda</p>
         
         <input type="text" id="nama" placeholder="Ketik Nama Lengkap..." autocomplete="off">
+        <input type="password" id="password" placeholder="Buat Password Akun..." autocomplete="new-password">
         
         <div class="video-container" id="v-box">
             <div class="scan-line"></div>
@@ -210,6 +211,7 @@
     const video = document.getElementById('video');
     const status = document.getElementById('status');
     const inputNama = document.getElementById('nama');
+    const inputPassword = document.getElementById('password');
     const vBox = document.getElementById('v-box');
     
     let isProcessing = false;
@@ -221,18 +223,18 @@
         try {
             if (isMobile) {
                 await Swal.fire({
-    title: 'Izin Biometrik',
-    text: 'Sistem akan mengakses kamera untuk merekam data wajah Anda.',
-    imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png', // Contoh URL icon kamera
-    imageWidth: 80,
-    imageHeight: 80,
-    imageAlt: 'Icon Kamera',
-    confirmButtonText: 'Mulai Sekarang',
-    confirmButtonColor: '#3498db',
-    background: '#1a1c1e',
-    color: '#fff'
-});
-}
+                    title: 'Akses Sistem',
+                    text: 'Sistem akan mengakses kamera untuk merekam data wajah Anda.',
+                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/685/685655.png', 
+                    imageWidth: 80,
+                    imageHeight: 80,
+                    imageAlt: 'Icon Kamera',
+                    confirmButtonText: 'Mulai Sekarang',
+                    confirmButtonColor: '#3498db',
+                    background: '#1a1c1e',
+                    color: '#fff'
+                });
+            }
 
             showStatus("Memuat AI Engine...", "process");
             await Promise.all([
@@ -251,7 +253,7 @@
             });
             video.srcObject = stream;
             
-            showStatus("Siap. Silakan masukkan nama.", "process");
+            showStatus("Siap. Silakan isi nama dan password.", "process");
             startScan();
         } catch (err) {
             console.error(err);
@@ -274,123 +276,136 @@
         }
     }
 
-        function showStatus(text, type) {
-            status.innerText = text;
-            vBox.classList.remove('scanning', 'success', 'error');
-            
-            if (type === 'success') {
-                status.className = 'msg-success';
-                vBox.classList.add('success');
-            } else if (type === 'error') {
-                status.className = 'msg-error';
-                vBox.classList.add('error');
-            } else {
-                status.className = 'msg-process';
-                if (text.includes("Memindai")) vBox.classList.add('scanning');
-            }
-        }
-
-        function startScan() {
-            const scanInterval = setInterval(async () => {
-                if (isProcessing) return;
-
-                const nama = inputNama.value.trim();
-                if (nama.length < 3) {
-                    showStatus("Ketik nama (min. 3 karakter)", "process");
-                    return;
-                }
-
-                showStatus("Memindai Wajah... Tetap Diam", "process");
-
-                const detection = await faceapi.detectSingleFace(
-                    video, 
-                    new faceapi.TinyFaceDetectorOptions()
-                ).withFaceLandmarks().withFaceDescriptor();
-
-                if (detection) {
-                    isProcessing = true;
-                    clearInterval(scanInterval); 
-                    handleRegistration(detection, nama);
-                }
-            }, 1000);
-        }
-
-        // Ganti fungsi handleRegistration lama Anda dengan versi ini
-async function handleRegistration(detection, nama) {
-    showStatus("Menangkap foto & sinkronisasi...", "process");
-
-    // --- TAMBAHAN: Logika Capture Foto ---
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    
-    // Mirroring balik agar foto tidak terbalik (karena video di-mirror di CSS)
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Ambil data gambar Base64
-    const fotoBase64 = canvas.toDataURL('image/jpeg', 0.9);
-    // -------------------------------------
-
-    const descriptor = Array.from(detection.descriptor);
-
-    try {
-        const cek = await fetch('cek_wajah.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ descriptor })
-        });
-        const resCek = await cek.json();
-
-        if (resCek.exists) {
-            showStatus(`Gagal: Wajah ini milik ${resCek.nama}`, "error");
-            Swal.fire({
-                title: 'Wajah Sudah Terdaftar',
-                text: `Data biometrik ini sudah digunakan oleh ${resCek.nama}.`,
-                icon: 'warning',
-                background: '#1a1c1e', color: '#fff',
-                confirmButtonColor: '#3498db'
-            });
-            setTimeout(() => { isProcessing = false; startScan(); }, 4000);
-            return;
-        }
-
-        // Kirim nama, descriptor, DAN foto ke simpan_wajah.php
-        const simpan = await fetch('simpan_wajah.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                nama: nama, 
-                descriptor: descriptor,
-                foto: fotoBase64 // <-- Data foto baru
-            })
-        });
-
-        if (simpan.ok) {
-            showStatus("Registrasi Berhasil!", "success");
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Data wajah dan foto telah disimpan.',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false,
-                background: '#1a1c1e', color: '#fff'
-            }).then(() => {
-                window.location.href = 'verifikasi.php';
-            });
+    function showStatus(text, type) {
+        status.innerText = text;
+        vBox.classList.remove('scanning', 'success', 'error');
+        
+        if (type === 'success') {
+            status.className = 'msg-success';
+            vBox.classList.add('success');
+        } else if (type === 'error') {
+            status.className = 'msg-error';
+            vBox.classList.add('error');
         } else {
-            throw new Error();
+            status.className = 'msg-process';
+            if (text.includes("Memindai")) vBox.classList.add('scanning');
         }
-
-    } catch (error) {
-        showStatus("Kesalahan server.", "error");
-        setTimeout(() => { isProcessing = false; startScan(); }, 3000);
     }
-}
 
-        window.onload = init;
+    function startScan() {
+        const scanInterval = setInterval(async () => {
+            if (isProcessing) return;
+
+            const nama = inputNama.value.trim();
+            const password = inputPassword.value;
+
+            if (nama.length < 3) {
+                showStatus("Ketik nama (min. 3 karakter)", "process");
+                return;
+            }
+
+            if (password.length < 6) {
+                showStatus("Buat password (min. 6 karakter)", "process");
+                return;
+            }
+
+            showStatus("Memindai Wajah... Tetap Diam", "process");
+
+            const detection = await faceapi.detectSingleFace(
+                video, 
+                new faceapi.TinyFaceDetectorOptions()
+            ).withFaceLandmarks().withFaceDescriptor();
+
+            if (detection) {
+                isProcessing = true;
+                clearInterval(scanInterval); 
+                handleRegistration(detection, nama, password);
+            }
+        }, 1000);
+    }
+
+    async function handleRegistration(detection, nama, password) {
+        showStatus("Menangkap foto & sinkronisasi...", "process");
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const fotoBase64 = canvas.toDataURL('image/jpeg', 0.9);
+        const descriptor = Array.from(detection.descriptor);
+
+        try {
+            const cek = await fetch('cek_wajah.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descriptor })
+            });
+            const resCek = await cek.json();
+
+            if (resCek.exists) {
+                showStatus(`Gagal: Wajah ini milik ${resCek.nama}`, "error");
+                Swal.fire({
+                    title: 'Wajah Sudah Terdaftar',
+                    text: `Data biometrik ini sudah digunakan oleh ${resCek.nama}.`,
+                    icon: 'warning',
+                    background: '#1a1c1e', color: '#fff',
+                    confirmButtonColor: '#3498db'
+                });
+                setTimeout(() => { isProcessing = false; startScan(); }, 4000);
+                return;
+            }
+
+            const simpan = await fetch('simpan_wajah.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    nama: nama, 
+                    password: password,
+                    descriptor: descriptor,
+                    foto: fotoBase64
+                })
+            });
+
+            const rawResponse = await simpan.text();
+            let resSimpan;
+            
+            try {
+                resSimpan = JSON.parse(rawResponse.trim());
+            } catch(e) {
+                console.error("Format respons bukan JSON murni:", rawResponse);
+                throw new Error("Terjadi masalah pada format data server.");
+            }
+
+            if (simpan.ok && resSimpan.status === 'success') {
+                showStatus("Registrasi Berhasil!", "success");
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Data wajah, akun, dan foto telah disimpan.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: '#1a1c1e', color: '#fff'
+                }).then(() => {
+                    window.location.href = 'verifikasi.php';
+                });
+            } else {
+                showStatus(resSimpan.message || "Gagal menyimpan data.", "error");
+                setTimeout(() => { isProcessing = false; startScan(); }, 3000);
+            }
+
+        } catch (error) {
+            console.error(error);
+            showStatus("Kesalahan server.", "error");
+            setTimeout(() => { isProcessing = false; startScan(); }, 3000);
+        }
+    }
+
+    window.onload = init;
     </script>
 </body>
 </html>
