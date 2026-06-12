@@ -2,17 +2,29 @@
 session_start();
 include 'koneksi.php';
 
+header('Content-Type: application/json');
+
 $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 
 if (isset($data['nama'])) {
     $nama_terdeteksi = $data['nama'];
-    $stmt = $conn->prepare("SELECT id, nama, session_token FROM data_wajah WHERE nama = ?");
+    
+    $stmt = $conn->prepare("SELECT id, nama, role, session_token FROM data_wajah WHERE nama = ?");
     $stmt->bind_param("s", $nama_terdeteksi);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
+        
+        if (strtolower($row['role']) === 'admin') {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Role Admin wajib menggunakan verifikasi Password.'
+            ]);
+            exit;
+        }
+
         $user_id = $row['id'];
         
         $is_conflict = !empty($row['session_token']); 
@@ -57,10 +69,18 @@ if (isset($data['nama'])) {
         $_SESSION['terverifikasi'] = true;
         $_SESSION['user_id'] = $user_id;
         $_SESSION['nama_user'] = $row['nama'];
+        
+        $_SESSION['nama'] = $row['nama'];
+        $_SESSION['role'] = $row['role'];
 
         echo json_encode([
             'status' => 'success',
-            'conflict' => $is_conflict
+            'conflict' => $is_conflict,
+            'role' => $row['role']
         ]);
+        exit;
     }
 }
+
+echo json_encode(['status' => 'error', 'message' => 'Data tidak valid.']);
+exit;

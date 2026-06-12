@@ -387,7 +387,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['new_asset'])) {
         .catch(error => console.error('Gagal memvalidasi status sesi:', error));
 }
 
-// Jalankan pengecekan otomatis ke file cek_sesi.php setiap 5 detik (5000ms)
 const intervalCekSesiEditor = setInterval(periksaSesiEditor, 5000);
     </script>
 

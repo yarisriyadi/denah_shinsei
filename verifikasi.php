@@ -54,7 +54,6 @@
             user-select: none;
         }
 
-        /* --- Style Baru: Pengalih Mode --- */
         .mode-container {
             display: flex;
             background: #111315;
@@ -92,7 +91,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- Style Baru: Tombol On/Off Kamera Overlap --- */
         .cam-toggle-btn {
             position: absolute;
             top: 15px;
@@ -145,7 +143,6 @@
 
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* --- Style Baru: Elemen Form Password --- */
         .password-container {
             display: none;
             text-align: left;
@@ -215,6 +212,21 @@
             border-radius: 24px !important;
             border: 1px solid #2a2d30 !important;
         }
+        .forgot-password-link {
+            display: block;
+            text-align: right;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+        .forgot-password-link a {
+            color: var(--text-muted);
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .forgot-password-link a:hover {
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -248,6 +260,15 @@
                     <label for="login-password">Kata Sandi (Password)</label>
                     <input type="password" id="login-password" placeholder="Masukkan password" required autocomplete="current-password">
                 </div>
+                
+                <div class="forgot-password-link">
+                    <a href="lupa_password.php">Lupa Password?</a>
+                </div>
+
+                <div class="forgot-password-link" style="margin-top: 5px;">
+                    <a href="update_biometrik.php" style="color: var(--success);"><i class="fa-solid fa-user-plus"></i> Daftarkan Face ID</a>
+                </div>
+                
                 <button type="submit" class="btn-submit-pass">Masuk</button>
             </form>
         </div>
@@ -267,6 +288,7 @@
     let scanLoopInterval = null;
     let isCameraOn = true;
     let currentActiveMode = 'face';
+    let userRoleMapping = {}; 
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -384,18 +406,21 @@
             if (!response.ok) throw new Error("Gagal mengambil data dari server");
             
             const dataWajah = await response.json();
-            if (!dataWajah || dataWajah.length === 0) {
-                showStatus("Database Kosong. Silahkan Registrasi.", "error");
+            const validDataWajah = dataWajah.filter(user => user.descriptor !== null && user.descriptor !== '' && user.descriptor !== undefined);
+
+            if (!validDataWajah || validDataWajah.length === 0) {
+                showStatus("Tidak Ada Biometrik Aktif. Gunakan Password.", "error");
+                setTimeout(() => { switchMode('pass'); }, 1500);
                 return;
             }
 
-            const labeledDescriptors = dataWajah.map(user => {
+            const LabeledDescriptors = validDataWajah.map(user => {
                 let desc = typeof user.descriptor === 'string' ? JSON.parse(user.descriptor) : user.descriptor;
+                userRoleMapping[user.nama] = user.role || 'user';
                 return new faceapi.LabeledFaceDescriptors(user.nama, [new Float32Array(desc)]);
             });
 
-            faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
-
+            faceMatcher = new faceapi.FaceMatcher(LabeledDescriptors, 0.55);
             await startCameraStream();
 
         } catch (err) {
@@ -444,7 +469,8 @@
                         stopCameraStream();
                         
                         showStatus("ID TERVERIFIKASI", "success");
-                        handleLoginSuccess(bestMatch.label);
+                        const detectedRole = userRoleMapping[bestMatch.label] || 'user';
+                        handleLoginSuccess(bestMatch.label, detectedRole);
                     } else {
                         showStatus("Memindai... Wajah tidak dikenali", "process");
                     }
@@ -457,7 +483,7 @@
         }, 700); 
     }
 
-    function handleLoginSuccess(namaUser) {
+    function handleLoginSuccess(namaUser, roleUser) {
         Swal.fire({
             title: 'Akses Diterima!',
             text: `Selamat Datang, ${namaUser}`,
@@ -474,12 +500,16 @@
             await fetch('set_session.php', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nama: namaUser }) 
+                body: JSON.stringify({ nama: namaUser, role: roleUser }) 
             });
             
             setTimeout(() => {
-                window.location.href = 'load_masuk.php';
-            }, 1500); 
+                if (roleUser === 'admin') {
+                    window.location.href = 'admin_dashboard.php';
+                } else {
+                    window.location.href = 'load_masuk.php';
+                }
+            }, 1000); 
         });
     }
 
@@ -508,7 +538,7 @@
             if (result.status === 'success') {
                 isFinished = true;
                 stopCameraStream();
-                handleLoginSuccess(result.nama);
+                handleLoginSuccess(result.nama, result.role);
             } else {
                 Swal.fire({
                     title: 'Verifikasi Gagal',

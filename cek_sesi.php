@@ -19,11 +19,11 @@ $stmt->execute();
 $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 
-if ($row && $row['session_token'] !== $current_session) {    
-
-$_SESSION = array();
+if ($row && $row['session_token'] !== $current_session) {
     
-if (ini_get("session.use_cookies")) {
+    $_SESSION = array();
+    
+    if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000,
             $params["path"], $params["domain"],

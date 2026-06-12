@@ -879,7 +879,7 @@ function saveImage() {
 
                 fetch('save_denah_edit.php', {
                     method: 'POST',
-                    body: formData 
+                    body: formData // Mengirim FormData secara langsung
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -901,7 +901,7 @@ function saveImage() {
                         confirmButtonText: 'Coba Lagi'
                     });
                 });
-            }, 'image/jpeg', 0.85); 
+            }, 'image/jpeg', 0.85); // Kualitas 0.85 sudah cukup bagus
         }
     });
 }
@@ -919,7 +919,6 @@ window.addEventListener('keydown', (e) => {
         if (mode === 'text' && activeText) cancelText();
         else { setMode('move'); selectedItemSrc = null; }
     }
-    // PC Shortcut: R untuk putar 45 derajat
     if (e.key.toLowerCase() === 'r' && mode === 'stamp') {
         stampRotation = (stampRotation + 45) % 360;
     }
@@ -958,7 +957,7 @@ window.addEventListener('online', () => {
         timer: 3000
     });
 });
-
+    
 function periksaSesiEditor() {
     fetch('cek_sesi.php')
         .then(response => response.json())
@@ -982,7 +981,7 @@ function periksaSesiEditor() {
                     confirmButtonText: 'Kembali',
                     confirmButtonColor: '#ff4757'
                 }).then(() => {
-                    window.location.href = 'verifikasi.php';
+                    window.location.href = 'verifikasi.php'; 
                 });
             }
         })

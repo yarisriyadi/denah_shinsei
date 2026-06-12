@@ -36,6 +36,7 @@ if ($id_terdeteksi) {
     }
 }
 
+// Tambahan: Logika Ucapan Waktu Dinamis
 date_default_timezone_set('Asia/Jakarta');
 $jam = date('H');
 if ($jam >= 5 && $jam < 11) {
@@ -67,7 +68,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
             unlink('uploads/'.$fotoUser);
         }
 
-        $namaFileBaru = "user_" . $id_terdeteksi . "_" . time() . "." . $ekstensiFile;
+        $namaFileBaru = $namaUser . "_". $id_terdeteksi . "_" . time() . "." . $ekstensiFile;
         
         if (move_uploaded_file($tmpName, 'uploads/' . $namaFileBaru)) {
             $update = "UPDATE data_wajah SET foto = ? WHERE id = ?";
@@ -172,6 +173,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
             object-fit: cover;
         }
 
+        /* Dropdown CSS */
         .dropdown-photo {
             position: absolute;
             bottom: 5px;
@@ -309,6 +311,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
                 <?php endif; ?>
             </div>
             
+            <!-- Tombol Tiga Titik & Dropdown -->
             <div class="dropdown-photo">
                 <div class="btn-ellipsis" onclick="toggleDropdown(event)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121416" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -372,7 +375,6 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         document.getElementById("photoMenu").classList.toggle("show");
     }
 
-    // Close dropdown when clicking outside
     window.onclick = function(event) {
         if (!event.target.matches('.btn-ellipsis') && !event.target.closest('.btn-ellipsis')) {
             var dropdowns = document.getElementsByClassName("dropdown-menu");
@@ -385,6 +387,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         }
     }
 
+    // Handle File Upload
     function handleFileSelect(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -415,6 +418,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         }
     }
 
+    // Handle Delete
     function deletePhoto() {
         Swal.fire({
             title: 'Hapus Foto Profil?',
@@ -435,6 +439,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
         })
     }
 
+    // URL Alerts (Upload/Delete Success)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('upload') && urlParams.get('upload') === 'success') {
         Swal.fire({
@@ -484,7 +489,7 @@ if (isset($_FILES['profile_pix']) && $_FILES['profile_pix']['error'] === 0) {
                     confirmButtonText: 'Kembali',
                     confirmButtonColor: '#ff4757'
                 }).then(() => {
-                    window.location.href = 'verifikasi.php'; 
+                    window.location.href = 'verifikasi.php'; // Sesuaikan nama file login Anda
                 });
             }
         })

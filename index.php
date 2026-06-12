@@ -367,7 +367,6 @@ if ($id_terdeteksi) {
             content: url('assets/icon.webp'); 
         }
 
-        /* --- Perbaikan Welcome Screen & Card (Anti-Geser) --- */
         #welcome-screen {
             position: absolute;
             top: 0;
@@ -396,7 +395,6 @@ if ($id_terdeteksi) {
             max-width: 420px;
             width: 100%;
             box-sizing: border-box;
-            /* Dihapus: animasi welcomeEntrance berlebih untuk mencegah shifting */
         }
 
         .welcome-icon {
@@ -434,7 +432,6 @@ if ($id_terdeteksi) {
             text-transform: uppercase;
         }
 
-        /* --- Perbaikan Map Loader Spinner (Hanya Spinner dan Angka) --- */
         .map-loader {
             position: absolute;
             top: 50%;
@@ -445,7 +442,6 @@ if ($id_terdeteksi) {
             flex-direction: column; 
             align-items: center;
             justify-content: center;
-            /* Latar belakang kotak hitam transparan dan padding dibersihkan */
             background: none; 
             padding: 0;
             border-radius: 0;
@@ -483,7 +479,6 @@ if ($id_terdeteksi) {
             pointer-events: none;
         }
 
-        /* --- Media Queries --- */
         @media (max-width: 768px) {
             #sidebar {
                 position: fixed;
@@ -559,6 +554,31 @@ if ($id_terdeteksi) {
             to { opacity: 1; transform: translateY(0); }
         }
         .btn-print.hidden { display: none; }
+          .welcome-divider {
+    width: 60%;              
+    height: 2px;              
+    background: linear-gradient(90deg, transparent, #3498db, transparent); 
+    margin: 20px auto;        
+    opacity: 0.7;
+}
+          
+.mobile-inline-hamburger {
+    display: none;             
+    font-size: 14px;           
+    color: #ffffff;           
+    background-color: #3498db; 
+    padding: 2px 6px;          
+    border-radius: 4px;        
+    margin-left: 6px;          
+    vertical-align: middle;    
+    line-height: 1;            
+}
+
+@media (max-width: 768px) {
+    .mobile-inline-hamburger {
+        display: inline-block;
+    }
+}
       </style>
 </head>
 <body>
@@ -668,13 +688,17 @@ if ($id_terdeteksi) {
             <div class="welcome-icon">🗺️</div>
             
             <h2 id="welcome-greeting"><?= $sapaan ?>, <?= htmlspecialchars($namaUser) ?>!</h2>
-            <p>Silakan Pilih Maps</p>
+            
+            <p>Silakan Pilih Maps<span class="mobile-inline-hamburger">☰</span></p>
+            
+            <div class="welcome-divider"></div>
             
             <div class="version-badge">
                 Version 1.0
             </div>
         </div>
     </div>
+
 
     <div id="map-loader" class="map-loader" style="display: none;">
         <div class="spinner"></div>
@@ -788,7 +812,6 @@ function loadMap(file, w, h, judul, element) {
 
     if (currentOverlay) map.removeLayer(currentOverlay);
 
-    // Validasi data kolom gambar dari database jika kosong / NULL
     if (!file || file === 'NULL' || file.trim() === '') {
         const btnExport = document.getElementById('btnExport');
         if (btnExport) btnExport.style.display = 'none';
@@ -1084,7 +1107,6 @@ window.addEventListener('click', function(e) {
     fetch('cek_sesi.php')
         .then(response => response.json())
         .then(data => {
-            
             if (data.status === 'conflict' || data.status === 'invalid') {
                 
                 clearInterval(intervalCekSesi);
