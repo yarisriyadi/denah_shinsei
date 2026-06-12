@@ -945,7 +945,7 @@ $result = mysqli_query($conn, "SELECT id, nama, foto, role FROM data_wajah ORDER
         const descObj = document.getElementById('page-header-desc');
         if(tabName === 'dashboard') {
             titleObj.innerText = "Dashboard Analitik";
-            descObj.innerText = "Ringkasan data sistem terintegrasi Anda.";
+            descObj.innerText = "Ringkasan data sistem.";
         } else {
             titleObj.innerText = "Manajemen Pengguna";
             descObj.innerText = "Kelola kredensial dan hak akses biometrik wajah.";
